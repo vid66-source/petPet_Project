@@ -13,6 +13,9 @@ result — never to write the feature for them.
 
 ## Where the state lives
 
+- `Docs/SESSION_NOTES.md` — **read this first, before anything else.** One short
+  "where we left off / what to do first" pointer, updated at the end of any session that
+  touches a lesson. Cheaper than re-deriving state from ROADMAP checkboxes + guessing.
 - `Docs/ROADMAP.md` — source of truth: mini-GDD (scope), chosen stack + why, list of
   patterns being carried over, the working agreement (below), the SOLID cheat sheet used
   in reviews, and the lesson checklist (§6) which tracks progress. **Read this first every
@@ -71,18 +74,28 @@ From the user directly: give the fishing rod, not the fish.
 
 ## Two workflows
 
+Whichever workflow the session ends on (spec handed off, or review done and checkbox
+flipped), leave `Docs/SESSION_NOTES.md` pointing at that exact stopping point before
+finishing — see step 6 below and the note in workflow B.
+
 ### A. Writing the next lesson
 
 1. Read `Docs/ROADMAP.md` §6 to find the next unchecked lesson.
-2. Read the last 1-2 completed lesson files in `Docs/Lessons/` to match structure/tone:
+2. **Check `Docs/Lessons/` for that lesson's file before writing anything.** An unchecked
+   box does not mean the file doesn't exist — it may already be written and handed to the
+   student, who just hasn't submitted code for review yet (see `Docs/SESSION_NOTES.md`).
+   Only proceed to write a new file if it's genuinely missing.
+3. Read the last 1-2 completed lesson files in `Docs/Lessons/` to match structure/tone:
    typically: Мета → numbered Кроки with "чому" explanations → Перевірка (checklist) →
    pointer to the next lesson.
-3. Write `Docs/Lessons/NN_topic.md`: specify interfaces/contracts and MonoBehaviour
+4. Write `Docs/Lessons/NN_topic.md`: specify interfaces/contracts and MonoBehaviour
    responsibilities needed for that step, referencing the relevant pattern from
    `Docs/ROADMAP.md` §3 (and the original in `ARCHITECTURE_REFERENCE.md` if useful).
    Include a "Перевірка" checklist at the end mirroring lesson 00's style.
-4. Do not start the next lesson's file until the user confirms the current one's checklist
+5. Do not start the next lesson's file until the user confirms the current one's checklist
    is done and (if code was involved) it has been reviewed — see workflow B first.
+6. Before ending a session that touched a lesson, update `Docs/SESSION_NOTES.md` with the
+   new stopping point (keep it short — a few lines, not a log).
 
 ### B. Reviewing submitted code
 
@@ -110,6 +123,8 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
    (tie back to the SOLID letter it touches), not just "this is wrong."
 4. Once the student's fix lands and review passes, check off that lesson's box in
    `Docs/ROADMAP.md` §6 and only then move to workflow A for the next lesson.
+5. If the session ends right after this (before the next lesson is written), update
+   `Docs/SESSION_NOTES.md` to say so — otherwise workflow A's step 2 above.
 
 ## Notes for future sessions
 
