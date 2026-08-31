@@ -15,8 +15,10 @@ result — never to write the feature for them.
 
 - `Docs/ROADMAP.md` — source of truth: mini-GDD (scope), chosen stack + why, list of
   patterns being carried over, the working agreement (below), the SOLID cheat sheet used
-  in reviews, and the lesson checklist (§5) which tracks progress. **Read this first every
-  session** — the `[ ]`/`[x]` checkboxes tell you exactly which lesson is current.
+  in reviews, and the lesson checklist (§6) which tracks progress. **Read this first every
+  session** — the `[ ]`/`[x]` checkboxes tell you exactly which lesson is current. Section
+  numbers shift whenever a section is inserted — re-check them against the file's actual
+  headers rather than trusting these numbers blindly if something reads oddly.
 - `Docs/Lessons/NN_topic.md` — one file per lesson, already-written ones are the style
   template for new ones.
 - Reference project (external, read-only, do not edit):
@@ -61,7 +63,7 @@ From the user directly: give the fishing rod, not the fish.
 - Every lesson should end with something playable/testable in Play Mode, not just code that
   compiles.
 - Keep scope pinned to the mini-GDD in `Docs/ROADMAP.md` §1. If the user proposes an
-  addition, check it against that scope first — MVP before stretch goals (§5 lists the
+  addition, check it against that scope first — MVP before stretch goals (§6 lists the
   known stretch goals, e.g. Addressables). Push back gently if a request would blow up the
   MVP scope; explain the tradeoff rather than silently expanding it.
 - All lesson files and explanations are in Ukrainian (match the language the course has
@@ -71,7 +73,7 @@ From the user directly: give the fishing rod, not the fish.
 
 ### A. Writing the next lesson
 
-1. Read `Docs/ROADMAP.md` §5 to find the next unchecked lesson.
+1. Read `Docs/ROADMAP.md` §6 to find the next unchecked lesson.
 2. Read the last 1-2 completed lesson files in `Docs/Lessons/` to match structure/tone:
    typically: Мета → numbered Кроки with "чому" explanations → Перевірка (checklist) →
    pointer to the next lesson.
@@ -86,8 +88,20 @@ From the user directly: give the fishing rod, not the fish.
 
 Triggered when the user says a lesson's code is ready, or asks for a check/review.
 
-1. Read the actual files the user changed (don't rely on their description).
-2. Check against `Docs/ROADMAP.md` §6 (SOLID cheat sheet) and the pattern list in §3:
+0. **Token discipline — read this before touching any tool.** Run
+   `bash Docs/tools/verify_lesson.sh <NN>` FIRST — one call, compact OK/FAIL lines, checks
+   package/scene/build-settings/file-existence for that lesson. Do not manually
+   `Read`/`find`/`cat` manifest.json, ProjectSettings, EditorBuildSettings, or walk the
+   CodeBase tree by hand — that was the actual complaint that led to this script existing
+   (~12k tokens burned on a folder/package check that should cost a few hundred). Only
+   fall back to manual exploration for something the script doesn't cover, and even then
+   read only the specific file/line needed, not whole directory dumps. If a check the
+   script needs doesn't exist yet for the lesson being reviewed, **add a case block to the
+   script** (see its header comment) instead of doing the check ad hoc and throwing the work
+   away.
+1. For the actual code correctness/SOLID review (the script only checks existence, not
+   quality): read the specific files the user changed, and only those.
+2. Check against `Docs/ROADMAP.md` §7 (SOLID cheat sheet) and the pattern list in §3:
    - Are MonoBehaviours "dumb" (no dependency lookup inside, wired via `Construct(...)`)?
    - Are dependencies passed as interfaces via constructor/`Construct()`, never
      `FindObjectOfType`/`GameObject.Find`/ad-hoc singletons outside `AllServices`?
@@ -95,7 +109,7 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
 3. Give concrete, file:line-referenced feedback — what to fix and *why* it matters
    (tie back to the SOLID letter it touches), not just "this is wrong."
 4. Once the student's fix lands and review passes, check off that lesson's box in
-   `Docs/ROADMAP.md` §5 and only then move to workflow A for the next lesson.
+   `Docs/ROADMAP.md` §6 and only then move to workflow A for the next lesson.
 
 ## Notes for future sessions
 
