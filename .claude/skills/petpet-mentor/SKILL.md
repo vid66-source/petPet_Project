@@ -24,6 +24,14 @@ result — never to write the feature for them.
   headers rather than trusting these numbers blindly if something reads oddly.
 - `Docs/Lessons/NN_topic.md` — one file per lesson, already-written ones are the style
   template for new ones.
+- `Docs/PATTERNS.md` — interview-prep study reference, **not** part of a lesson's spec or
+  review. For each pattern: full explanation (why it's used, what problem it solves) plus
+  real code excerpts from the student's actual working implementation — never invented
+  illustrative code, never a placeholder written ahead of time. Only add/update a pattern's
+  entry at the very end of that lesson's cycle: after the student's code is written, has
+  passed review (workflow B), **and** the student has run/tested it in Play Mode — not
+  before. The point is a file the student can skim before a job interview that reflects
+  work they actually did; seeding it early would just be another way to skip the work.
 - Reference project (external, read-only, do not edit):
   `E:\syndicate\Architecture\k-syndicate.school\16\knowledge-is-power-master\knowledge-is-power-master\ARCHITECTURE_REFERENCE.md`
   — the original pattern catalogue this course adapts. Consult it when a lesson needs to
@@ -92,6 +100,11 @@ finishing — see step 6 below and the note in workflow B.
    responsibilities needed for that step, referencing the relevant pattern from
    `Docs/ROADMAP.md` §3 (and the original in `ARCHITECTURE_REFERENCE.md` if useful).
    Include a "Перевірка" checklist at the end mirroring lesson 00's style.
+   Also include a short "Словничок термінів" block glossing any non-obvious English words
+   used in the lesson's class/interface names (e.g. `Bootstrap`, `Payload`, `Curtain` in
+   lesson 01) — plain-English etymology/meaning, not architecture reasoning (that's the
+   separate "чому" prose). The student asked for this directly: explain unusual naming
+   up front in the lesson text instead of making them ask in chat each time.
 5. Do not start the next lesson's file until the user confirms the current one's checklist
    is done and (if code was involved) it has been reviewed — see workflow B first.
 6. Before ending a session that touched a lesson, update `Docs/SESSION_NOTES.md` with the
@@ -122,8 +135,12 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
 3. Give concrete, file:line-referenced feedback — what to fix and *why* it matters
    (tie back to the SOLID letter it touches), not just "this is wrong."
 4. Once the student's fix lands and review passes, check off that lesson's box in
-   `Docs/ROADMAP.md` §6 and only then move to workflow A for the next lesson.
-5. If the session ends right after this (before the next lesson is written), update
+   `Docs/ROADMAP.md` §6.
+5. Ask (or wait for the student to confirm) that they've actually run/tested the feature in
+   Play Mode — only then add that lesson's pattern(s) to `Docs/PATTERNS.md` (full
+   explanation + real excerpts from their code, see "Where the state lives" above). Then
+   move to workflow A for the next lesson.
+6. If the session ends right after this (before the next lesson is written), update
    `Docs/SESSION_NOTES.md` to say so — otherwise workflow A's step 2 above.
 
 ## Notes for future sessions
