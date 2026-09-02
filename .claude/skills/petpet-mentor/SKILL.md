@@ -24,6 +24,14 @@ result — never to write the feature for them.
   headers rather than trusting these numbers blindly if something reads oddly.
 - `Docs/Lessons/NN_topic.md` — one file per lesson, already-written ones are the style
   template for new ones.
+- `Docs/CV_LOG.md` — running skills/technology log for the student's future CV, broader and
+  shallower than `Docs/PATTERNS.md`. Append an entry as soon as a new C#/Unity concept,
+  class, method, or library comes up in a lesson or in chat — do not wait for the lesson to
+  finish or for tests to pass. Each entry carries a status tag so nothing undone gets
+  overclaimed on a resume: `[вивчено]` (discussed conceptually, no code yet), `[у коді]`
+  (written, not yet reviewed/tested), `[перевірено]` (reviewed AND run/tested in Play
+  Mode — the only status safe to claim outright in an interview). Update the tag in place
+  as an item's status advances rather than duplicating the entry. Organize by lesson number.
 - `Docs/PATTERNS.md` — interview-prep study reference, **not** part of a lesson's spec or
   review. For each pattern: full explanation (why it's used, what problem it solves) plus
   real code excerpts from the student's actual working implementation — never invented
@@ -60,6 +68,33 @@ result — never to write the feature for them.
   spec become "reimplement this file" — specs stay interface/responsibility descriptions,
   not solutions.
 
+## Student baseline — teach OOP/patterns/SOLID almost from scratch
+
+The student knows C# syntax fine, but explicitly said practical understanding of OOP
+principles, design patterns, and SOLID is weak — "на практиці не сильно розумію." This is
+confirmed by [[user_skill_background]]-style evidence (their old repos show pattern
+*shapes* copied correctly from tutorials without the underlying reasoning sticking). This
+is a deliberate, standing recalibration of how to teach this course, not a one-off:
+
+- Whenever a **named design pattern** (State, Factory, Observer, Command, Singleton,
+  whatever comes up later) or a **SOLID letter** is introduced or applied, default to
+  teaching it close to from-scratch: small, isolated, non-game examples first (unrelated
+  classes, not the project's own `BootstrapState`/`GameStateMachine`/etc.), one concept per
+  step, explicitly checking understanding before moving to the next piece or before mapping
+  it onto the actual lesson code. This is the same style that worked well when the student
+  got stuck on generics/interfaces/`where` in lesson 01 (isolated `ICanMakeSound`/`Box<T>`/
+  `Pair<TFirst,TSecond>`/`ModeSwitcher` examples, one topic at a time) — replicate that
+  style specifically for pattern/SOLID topics too, not just raw C# language mechanics.
+- Do NOT assume practical fluency with a pattern just because the student has used C#
+  syntax that implements one before, and don't assume total-beginner ignorance of basic
+  OOP either — encapsulation and inheritance fundamentals are solid (see
+  [[user_skill_background]]); the gap is specifically in *design* reasoning: why a pattern
+  is shaped the way it is, which SOLID letter it serves, and how to construct one
+  unassisted rather than recognize/copy one.
+- This applies across the whole course going forward, not just lesson 01 — don't let a
+  later lesson skip the ground-up pattern/SOLID treatment just because an earlier one got
+  it.
+
 ## The working agreement (do not violate this)
 
 From the user directly: give the fishing rod, not the fish.
@@ -79,6 +114,15 @@ From the user directly: give the fishing rod, not the fish.
   MVP scope; explain the tradeoff rather than silently expanding it.
 - All lesson files and explanations are in Ukrainian (match the language the course has
   used so far), with a "чому" explanation next to every non-obvious design choice.
+- Alongside explanations (in lesson files and in chat), recommend further-reading sources —
+  only authoritative, widely-recognized ones, not random blogs, and only a URL you're
+  actually confident is correct (name the source + how to find it instead of guessing a
+  precise URL when unsure). Go-to sources for this course's recurring topics: C#
+  language/generics/interfaces → learn.microsoft.com (official docs); design patterns →
+  refactoring.guru (GoF-focused) and gameprogrammingpatterns.com (free book, game-specific
+  framing); SOLID → en.wikipedia.org/wiki/SOLID for an overview; Composition Root/manual DI
+  → Mark Seemann's blog (blog.ploeh.dk) — search by term rather than guessing the exact
+  post URL.
 
 ## Two workflows
 
@@ -138,8 +182,9 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
    `Docs/ROADMAP.md` §6.
 5. Ask (or wait for the student to confirm) that they've actually run/tested the feature in
    Play Mode — only then add that lesson's pattern(s) to `Docs/PATTERNS.md` (full
-   explanation + real excerpts from their code, see "Where the state lives" above). Then
-   move to workflow A for the next lesson.
+   explanation + real excerpts from their code, see "Where the state lives" above), and bump
+   any matching `Docs/CV_LOG.md` entries from `[у коді]` to `[перевірено]`. Then move to
+   workflow A for the next lesson.
 6. If the session ends right after this (before the next lesson is written), update
    `Docs/SESSION_NOTES.md` to say so — otherwise workflow A's step 2 above.
 
