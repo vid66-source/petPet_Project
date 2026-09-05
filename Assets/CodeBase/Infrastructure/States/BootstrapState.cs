@@ -1,13 +1,27 @@
-﻿using System;
+﻿using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
 {
     public class BootstrapState : IState
     {
-        public BootstrapState(GameStateMachine gameStateMachine, SceneLoader sceneLoader) { }
+        private const string SceneName  =  "Level_Arena";
 
-        public void Exit() { }
+        private GameStateMachine _stateMachine;
 
-        public void Enter() { }
+        public BootstrapState(GameStateMachine gameStateMachine, SceneLoader sceneLoader)
+        {
+            _stateMachine = gameStateMachine;
+        }
+
+        public void Enter()
+        {
+            Debug.Log($"[FSM] Enter {GetType().Name}");
+            _stateMachine.Enter<LoadLevelState, string>(SceneName);
+        }
+
+        public void Exit()
+        {
+            // TODO
+        }
     }
 }

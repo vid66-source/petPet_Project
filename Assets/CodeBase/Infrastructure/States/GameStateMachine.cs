@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Infrastructure.Logic;
 
 namespace CodeBase.Infrastructure.States
 {
     public class GameStateMachine
     {
         private readonly Dictionary<Type, IExitableState> _states;
+        private IExitableState _currentState;
 
         public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain)
         {
@@ -15,10 +17,26 @@ namespace CodeBase.Infrastructure.States
             _states.Add(typeof(GameLoopState), new GameLoopState(this));
         }
 
-        void Enter<TState>() where TState : class, IState
-        { }
+        public void Enter<TState>() where TState : class, IState
+        {
+            _currentState?.Exit();
 
-        void Enter<TState, TPayload>(TPayload payload) where TState : class, IPayloadedState<TPayload>
-        { }
+            TState newState = _states[typeof(TState)] as TState;
+
+            _currentState = newState;
+
+            newState?.Enter();
+        }
+
+        public void Enter<TState, TPayload>(TPayload payload) where TState : class, IPayloadedState<TPayload>
+        {
+            _currentState?.Exit();
+
+            TState newState = _states[typeof(TState)] as TState;
+
+            _currentState = newState;
+
+            newState?.Enter(payload);
+        }
     }
 }
