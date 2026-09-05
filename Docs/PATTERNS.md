@@ -10,4 +10,168 @@
 
 ---
 
-*(поки порожньо — урок 01 ще в процесі: код не написаний, рев'ю не було)*
+## Урок 01 — Composition Root і FSM стану гри
+
+Підтверджено в Play Mode 2026-09-05: повна послідовність `Enter BootstrapState → Enter
+LoadLevelState → Enter GameLoopState` у Console, без винятків.
+
+### Composition Root
+
+**Проблема, яку вирішує:** хтось повинен зібрати граф залежностей гри (хто кому що
+передає в конструктор), і це має бути видно одним поглядом, а не розмазано по коду через
+`FindObjectOfType`/статичні синглтони.
+
+**Реалізація** — `Assets/CodeBase/Infrastructure/GameBootstrapper.cs`, єдина точка, де
+Unity-світ (`MonoBehaviour`) торкається чистого C#-світу гри:
+
+```csharp
+public class GameBootstrapper : MonoBehaviour, ICoroutineRunner
+{
+    [SerializeField] private LoadingCurtain _curtain;
+    private Game _game;
+
+    private void Awake()
+    {
+        _game = new Game(this, _curtain);
+        DontDestroyOnLoad(this);
+        _game.StateMachine.Enter<BootstrapState>();
+    }
+}
+```
+
+`Game.cs` — кореневий не-MonoBehaviour об'єкт, який продовжує збирати граф далі:
+
+```csharp
+public class Game
+{
+    public GameStateMachine StateMachine { get; }
+
+    public Game(ICoroutineRunner coroutineRunner, LoadingCurtain curtain)
+    {
+        SceneLoader sceneLoader = new SceneLoader(coroutineRunner);
+        StateMachine = new GameStateMachine(sceneLoader, curtain);
+    }
+}
+```
+
+Усі залежності передаються через конструктор — жодного класу, який сам собі щось шукає.
+
+### State (GoF) — FSM глобального стану гри
+
+**Проблема:** описати послідовність фаз гри (завантаження → рівень → геймплей) без
+розкиданих `if (isLoading) ... else if (isPlaying) ...` по всьому коду.
+
+**Контракти** — `IState.cs`, `IPayloadedState.cs`, `IExitableState.cs`:
+
+```csharp
+public interface IExitableState { void Exit(); }
+public interface IState : IExitableState { void Enter(); }
+public interface IPayloadedState<TPayload> : IExitableState { void Enter(TPayload payload); }
+```
+
+**Context** — `GameStateMachine.cs`, тримає всі стани як
+`Dictionary<Type, IExitableState>`, створені один раз у конструкторі:
+
+```csharp
+public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain)
+{
+    _states = new Dictionary<Type, IExitableState>();
+    _states.Add(typeof(BootstrapState), new BootstrapState(this, sceneLoader));
+    _states.Add(typeof(LoadLevelState), new LoadLevelState(this, sceneLoader, loadingCurtain));
+    _states.Add(typeof(GameLoopState), new GameLoopState(this));
+}
+
+public void Enter<TState>() where TState : class, IState
+{
+    _currentState?.Exit();
+    TState newState = _states[typeof(TState)] as TState;
+    _currentState = newState;
+    newState?.Enter();
+}
+```
+
+**Конкретні стани** самі знають, куди переходять далі — наприклад
+`BootstrapState.Enter()`:
+
+```csharp
+public void Enter()
+{
+    Debug.Log($"[FSM] Enter {GetType().Name}");
+    _stateMachine.Enter<LoadLevelState, string>(SceneName);
+}
+```
+
+### SRP (Single Responsibility)
+
+Кожен клас має рівно одну причину змінюватись:
+- `SceneLoader.cs` уміє рівно одне — асинхронно завантажити сцену й повідомити колбеком:
+  ```csharp
+  public void Load(string sceneName, Action onLoaded = null)
+  {
+      if (SceneManager.GetActiveScene().name == sceneName)
+          onLoaded?.Invoke();
+      else
+          _coroutineRunner.StartCoroutine(LoadScene(sceneName, onLoaded));
+  }
+  ```
+- `LoadLevelState.cs` відповідає за один сценарій — "покажи завісу, завантаж сцену, сховай
+  завісу", нічого про гравця чи UI:
+  ```csharp
+  public void Enter(string sceneName)
+  {
+      Debug.Log($"[FSM] Enter {GetType().Name}");
+      _loadingCurtain.Show();
+      _sceneLoader.Load(sceneName, onLoaded);
+  }
+
+  private void onLoaded() => _stateMachine.Enter<GameLoopState>();
+
+  public void Exit() => _loadingCurtain.Hide();
+  ```
+
+### OCP (Open/Closed)
+
+`GameStateMachine.Enter<TState>()` написаний один раз і працює для будь-якої кількості
+станів, зареєстрованих у словнику — включно з тими, яких ще немає (майбутній
+`PauseState`). Додавання нового стану = новий клас + рядок реєстрації в конструкторі
+`GameStateMachine`, жоден з існуючих станів не редагується.
+
+### ISP (Interface Segregation)
+
+Три вузькі інтерфейси стану (`IExitableState`/`IState`/`IPayloadedState<TPayload>`) замість
+одного товстого — `BootstrapState`/`GameLoopState` реалізують тільки `Enter()` без
+параметра, `LoadLevelState` окремо `Enter(string)`; жоден не змушений реалізовувати метод,
+який йому не потрібен.
+
+### LSP (Liskov Substitution)
+
+`GameStateMachine.Enter<TState>()` працює однаково байдуже, чи `TState` — це
+`BootstrapState`, чи `GameLoopState`, чи майбутній `PauseState`: жодного
+`if (TState == typeof(...))`, жодних спецвипадків для конкретної реалізації.
+
+### DIP (Dependency Inversion)
+
+Найчистіший приклад — `ICoroutineRunner.cs`:
+
+```csharp
+public interface ICoroutineRunner { Coroutine StartCoroutine(IEnumerator coroutine); }
+```
+
+`SceneLoader` (логіка високого рівня) залежить від цієї абстракції, а не від конкретного
+`MonoBehaviour`:
+
+```csharp
+public class SceneLoader
+{
+    private readonly ICoroutineRunner _coroutineRunner;
+    public SceneLoader(ICoroutineRunner coroutineRunner) => _coroutineRunner = coroutineRunner;
+    ...
+}
+```
+
+`GameBootstrapper` реалізує `ICoroutineRunner` безкоштовно (у `MonoBehaviour` вже є
+`StartCoroutine` з потрібною сигнатурою) — конкретна деталь підставляється туди, де
+очікується абстракція, без жодного `GameBootstrapper.Instance`-звернення.
+
+Далі читати: State pattern — refactoring.guru; Composition Root/ручний DI — блог Марка
+Сімана (blog.ploeh.dk); SOLID — en.wikipedia.org/wiki/SOLID.

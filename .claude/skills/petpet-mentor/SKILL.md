@@ -40,6 +40,52 @@ result — never to write the feature for them.
   passed review (workflow B), **and** the student has run/tested it in Play Mode — not
   before. The point is a file the student can skim before a job interview that reflects
   work they actually did; seeding it early would just be another way to skip the work.
+- `Docs/HISTORY.md` — one growing project-history file (not one file per lesson), meant to
+  be committed to git as a detailed record of what was actually built, stage by stage.
+  Unlike `Docs/PATTERNS.md` (only named design patterns, interview-prep framing), this
+  covers **every** class/interface a lesson introduced: its responsibility, its methods and
+  what each does, why it exists, its dependencies (what it needs and where those come
+  from), and how it interacts with the rest of the code. Always written from the real final
+  code, not the original lesson spec — they can diverge (e.g. an unused constructor
+  parameter kept for consistency, a field renamed during review). One `## Урок NN — назва`
+  section per lesson, appended in arrival order; don't rewrite an already-appended lesson's
+  section except to correct a factual error in it. Same completion gate as
+  `Docs/PATTERNS.md`: only append a lesson's section after its code has passed review
+  (workflow B) **and** the student confirms they ran/tested it in Play Mode — never before,
+  for the same reason PATTERNS.md waits.
+
+  **Format is a depth-first execution narrative, not a flat list of per-class
+  descriptions.** Walk the program's actual main execution line starting from its entry
+  point; the moment that line references a dependency, dive into it right there (mark it
+  `→ Занурюємось у X`), explain its code and — recursively, same rule — its own
+  dependencies, then surface back (`← Повертаємось до Y`) to whichever class that
+  dependency was created for and continue its remaining branches/executors, until the walk
+  returns all the way to the main line and finishes it. A dependency already covered
+  earlier in the same walk is never re-expanded — just note it's already familiar and move
+  on. The student asked for this explicitly (twice — first for top-down-by-control
+  ordering, then corrected to this dive/return narrative when the flat version still
+  wasn't what they wanted): see the full lesson 01 section in `Docs/HISTORY.md` for the
+  exact pattern to replicate (`GameBootstrapper.Awake()` main line → dive into `Game` →
+  dive into `SceneLoader` → dive into `ICoroutineRunner` → surface → surface → dive into
+  `GameStateMachine` → dive into state contracts → dive into each of
+  `BootstrapState`/`LoadLevelState` (which itself dives into `LoadingCurtain`)/`GameLoopState`
+  → surface all the way back to `Awake()` to close the walk).
+- `Docs/Notes/` — one file per raw C#/Unity language or platform mechanic the student was
+  unfamiliar with the first time it came up (generics, delegates/`Action`, coroutines,
+  `DontDestroyOnLoad`, etc.) — not architecture patterns (`Docs/PATTERNS.md`) and not
+  how-the-project-was-built (`Docs/HISTORY.md`). Write a new note (or update an existing
+  one) the moment such a mechanic gets explained in chat — same "don't wait for the lesson
+  to finish" timing as `Docs/CV_LOG.md` updates, no Play Mode gate (this is reference
+  material, not a claim of finished work). Ground examples in the project's real code where
+  possible. Keep `Docs/Notes/README.md` (the index) in sync when adding a file.
+  **Source of topics is the student's actual past questions, NOT `Docs/CV_LOG.md`**
+  (that's a broader skills/résumé log, not a question log, and includes unrelated things
+  like other GitHub repos — the student explicitly corrected this confusion once already).
+  Past sessions' questions aren't stored verbatim anywhere permanent; recover them from git
+  history of `Docs/SESSION_NOTES.md` (`git log --oneline -- Docs/SESSION_NOTES.md`, then
+  `git show <hash>:Docs/SESSION_NOTES.md` for each prior commit) — each past session's
+  notes usually summarize what C# mechanic the student got stuck on and what isolated
+  example was used to explain it.
 - Reference project (external, read-only, do not edit):
   `E:\syndicate\Architecture\k-syndicate.school\16\knowledge-is-power-master\knowledge-is-power-master\ARCHITECTURE_REFERENCE.md`
   — the original pattern catalogue this course adapts. Consult it when a lesson needs to
@@ -94,6 +140,21 @@ is a deliberate, standing recalibration of how to teach this course, not a one-o
 - This applies across the whole course going forward, not just lesson 01 — don't let a
   later lesson skip the ground-up pattern/SOLID treatment just because an earlier one got
   it.
+
+**Correction, 2026-09-03:** the student pushed back on "isolated examples first" as the
+default — they said they generally do understand ("я в цілому щось розумію"), and asked
+instead to have OOP/SOLID usage pointed out directly **in the real project code**, in chat,
+as it comes up — not only through non-project toy examples. Their reasoning: seeing a
+principle applied in practice sticks better than reading about it in the abstract
+("розуміти, як воно застосовується відкладає в пам'яті яскравіше"). So:
+- Default now: when reviewing or discussing the student's actual project code, explicitly
+  call out in chat which class/line demonstrates which pattern/SOLID letter and *how* — ground
+  it in their real `CodeBase` code, not a stand-in example.
+- Isolated non-project examples (`ICanMakeSound`/`Box<T>`/`ModeSwitcher`-style) are still the
+  right move specifically when the student is stuck on raw C#/generics *mechanics*
+  (compiler-level confusion, not a design concept) — that part of the original approach was
+  validated and worked (lesson 01 generics stall). Don't drop it entirely, just don't lead
+  with it for pattern/SOLID concept explanations anymore.
 
 ## The working agreement (do not violate this)
 
@@ -181,10 +242,11 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
 4. Once the student's fix lands and review passes, check off that lesson's box in
    `Docs/ROADMAP.md` §6.
 5. Ask (or wait for the student to confirm) that they've actually run/tested the feature in
-   Play Mode — only then add that lesson's pattern(s) to `Docs/PATTERNS.md` (full
-   explanation + real excerpts from their code, see "Where the state lives" above), and bump
-   any matching `Docs/CV_LOG.md` entries from `[у коді]` to `[перевірено]`. Then move to
-   workflow A for the next lesson.
+   Play Mode — only then: add that lesson's pattern(s) to `Docs/PATTERNS.md` (full
+   explanation + real excerpts from their code), append that lesson's section to
+   `Docs/HISTORY.md` (every class/interface, from the real final code — see "Where the
+   state lives" above for both), and bump any matching `Docs/CV_LOG.md` entries from
+   `[у коді]` to `[перевірено]`. Then move to workflow A for the next lesson.
 6. If the session ends right after this (before the next lesson is written), update
    `Docs/SESSION_NOTES.md` to say so — otherwise workflow A's step 2 above.
 

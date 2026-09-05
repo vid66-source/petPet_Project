@@ -115,7 +115,7 @@
 ## 6. Мапа уроків
 
 - [x] `00_project_setup.md` — пакети, налаштування проєкту, скелет папок, сцени
-- [ ] `01_composition_root.md` — `Game`, `GameBootstrapper`, `IExitableState`/`IState`, `GameStateMachine`
+- [x] `01_composition_root.md` — `Game`, `GameBootstrapper`, `IExitableState`/`IState`, `GameStateMachine`
 - [ ] `02_asset_provider.md` — `IService`, `AllServices`, перший сервіс (`IAssetProvider` над `Resources`)
 - [ ] `03_service_locator_and_input.md` — `IInputService` (Strategy над новим Input System) як другий
       сервіс у контейнері, щоб на конкретному прикладі закріпити "етику роботи із сервісами".
