@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Logic;
+using CodeBase.Infrastructure.Services;
+using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
 {
@@ -9,12 +12,16 @@ namespace CodeBase.Infrastructure.States
         private readonly Dictionary<Type, IExitableState> _states;
         private IExitableState _currentState;
 
-        public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain)
+        public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain, AllServices services)
         {
             _states = new Dictionary<Type, IExitableState>();
-            _states.Add(typeof(BootstrapState), new BootstrapState(this, sceneLoader));
+            _states.Add(typeof(BootstrapState), new BootstrapState(this, services));
             _states.Add(typeof(LoadLevelState), new LoadLevelState(this, sceneLoader, loadingCurtain));
-            _states.Add(typeof(GameLoopState), new GameLoopState(this));
+            IAssetProvider assetProvider = services.GetService<IAssetProvider>();
+            _states.Add(typeof(GameLoopState), new GameLoopState(assetProvider));
+            Debug.Log($"[FSM] {GetType().Name} created {_states[typeof(BootstrapState)].GetType().Name} " +
+                      $"{_states[typeof(LoadLevelState)].GetType().Name} " +
+                      $"{_states[typeof(GameLoopState)].GetType().Name} states");
         }
 
         public void Enter<TState>() where TState : class, IState
