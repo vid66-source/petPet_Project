@@ -43,6 +43,17 @@ case "$lesson" in
     check "no FindObjectOfType in Infrastructure" "! grep -rq 'FindObjectOfType' '$ROOT/Assets/CodeBase/Infrastructure'"
     check "no public static fields in Infrastructure" "! grep -rq 'public static' '$ROOT/Assets/CodeBase/Infrastructure'"
     ;;
+  02)
+    for f in IService.cs AllServices.cs IAssetProvider.cs AssetProvider.cs; do
+      check "$f exists somewhere in CodeBase" "has_file '$ROOT/Assets/CodeBase' '$f'"
+    done
+    check "TestObject prefab exists in Resources" "[ -f '$ROOT/Assets/Resources/TestObject.prefab' ]"
+    check "no FindObjectOfType in Infrastructure" "! grep -rq 'FindObjectOfType' '$ROOT/Assets/CodeBase/Infrastructure'"
+    check "no public static outside AllServices.cs (sanctioned exception)" \
+      "! (grep -rl 'public static' '$ROOT/Assets/CodeBase/Infrastructure' | grep -v 'AllServices.cs' | grep -q .)"
+    check "BootstrapState registers a service via AllServices" \
+      "grep -q 'RegisterService' '$ROOT/Assets/CodeBase/Infrastructure/States/BootstrapState.cs'"
+    ;;
   *)
     echo "No checks defined for lesson '$lesson' yet."
     echo "Add a case block above when Docs/Lessons/${lesson}_*.md is written."

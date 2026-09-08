@@ -175,3 +175,127 @@ public class SceneLoader
 
 Далі читати: State pattern — refactoring.guru; Composition Root/ручний DI — блог Марка
 Сімана (blog.ploeh.dk); SOLID — en.wikipedia.org/wiki/SOLID.
+
+---
+
+## Урок 02 — Service Locator і Provider над асетами
+
+Підтверджено в Play Mode 2026-09-08: Console показує повний ланцюжок без винятків —
+реєстрація `IAssetProvider` у `AllServices`, побудова всіх трьох станів, переходи
+`BootstrapState → LoadLevelState → GameLoopState`, і в `GameLoopState.Enter()` реальне
+`LoadAsset`/`SpawnAsset` тестового префабу `TestObject` з `Resources/`.
+
+### Service Locator — `AllServices`
+
+**Проблема, яку вирішує:** десь потрібен один центральний реєстр сервісів гри (зараз —
+`IAssetProvider`, далі — `IInputService`, `IStaticDataService` тощо), щоб не тягнути
+кожну залежність вручну через усі проміжні конструктори і не звертатись до конкретних
+класів напряму.
+
+**Свідомий виняток із заборони на статичні синглтони** (яку сам же курс і викладає —
+див. DIP уроку 01, "жодного `GameBootstrapper.Instance`"): `AllServices.Instance` —
+єдине місце в проєкті, де публічний статичний доступ дозволений, і звертається до нього
+рівно три класи (`Game`, `GameStateMachine`, `BootstrapState`), ніде більше. Це
+свідомий компроміс Service Locator-патерну, а не порушення DIP — сам реєстр не ховає
+залежності всередині бізнес-логіки, він сам і є точкою збірки графу.
+
+`Assets/CodeBase/Infrastructure/Services/AllServices.cs`:
+
+```csharp
+public class AllServices
+{
+    private readonly Dictionary<Type, IService> _services;
+
+    public static AllServices Instance { get; } = new AllServices();
+
+    private AllServices()
+    {
+        _services = new Dictionary<Type, IService>();
+    }
+
+    public void RegisterService<TService>(TService service) where TService : class, IService
+    {
+        _services.Add(typeof(TService), service);
+        Debug.Log($"[Services] Registered service of type {typeof(TService).Name}");
+    }
+
+    public TService GetService<TService>() where TService : class, IService
+    {
+        var service = _services[typeof(TService)] as TService;
+        return service;
+    }
+}
+```
+
+Приватний конструктор + публічна `static` властивість, ініціалізована одразу при
+першому зверненні до класу (eager singleton) — інстанс гарантовано один на весь час
+життя гри, і ніхто ззовні не може створити другий через `new AllServices()`.
+`Dictionary<Type, IService>` — той самий прийом "тип як ключ", що й `GameStateMachine`
+уроку 01, тільки тут ключем реєструється сервіс, а не стан.
+
+`IService.cs` — маркерний інтерфейс без жодного методу:
+
+```csharp
+public interface IService { }
+```
+
+**Навіщо порожній інтерфейс:** він не описує поведінку, а обмежує, *що взагалі можна*
+покласти в `AllServices` — generic-constraint `where TService : class, IService` не
+дозволить зареєструвати будь-який випадковий об'єкт, тільки те, що явно позначено як
+сервіс. Це `I` та частково `D` з SOLID: вузький маркер замість "здогадуватись" по типу.
+
+### Provider — `IAssetProvider`/`AssetProvider`
+
+**Проблема, яку вирішує:** решта коду не повинна знати, *звідки* фізично береться
+асет (`Resources.Load`, а пізніше — Addressables, урок 15) — тільки що є спосіб
+попросити асет за шляхом і заспавнити його.
+
+```csharp
+public interface IAssetProvider : IService
+{
+    public GameObject LoadAsset(string assetPath);
+    public GameObject SpawnAsset(GameObject asset);
+    public GameObject SpawnAsset(GameObject asset, Vector3 position, Quaternion rotation);
+}
+
+public class AssetProvider : IAssetProvider
+{
+    public GameObject LoadAsset(string assetPath)
+    {
+        GameObject asset = Resources.Load<GameObject>(assetPath);
+        if (asset != null)
+            Debug.Log($"[AssetProvider] Loaded {assetPath}");
+        else
+            Debug.LogError($"[AssetProvider] Failed to load {assetPath}");
+        return asset;
+    }
+
+    public GameObject SpawnAsset(GameObject asset, Vector3 position, Quaternion rotation)
+    {
+        Debug.Log($"[AssetProvider] Spawning {asset.name} with position {position} and rotation {rotation}");
+        GameObject spawnAsset = Object.Instantiate(asset, position, rotation);
+        return spawnAsset;
+    }
+    // + беспараметрове SpawnAsset(GameObject asset) — той самий принцип
+}
+```
+
+`IAssetProvider : IService` — інтерфейс сервісу одразу успадковує маркер, тому
+`AllServices.RegisterService<IAssetProvider>(assetProvider)` компілюється без
+додаткового каста. Споживач (`GameLoopState`) отримує саме інтерфейс, а не конкретний
+`AssetProvider` — можна підмінити реалізацію (наприклад, на Addressables-провайдер в
+уроці 15) без жодної зміни в коді, який ним користується (ще один приклад DIP і LSP).
+
+### YAGNI — прибирання невикористаних параметрів конструктора
+
+Під час рев'ю цього уроку в конструкторах `BootstrapState` і `GameLoopState` знайшлись
+параметри, скопійовані по аналогії з сусідніх станів, але фактично ніде не використані
+(`SceneLoader sceneLoader` у `BootstrapState`, `GameStateMachine stateMachine` у
+`GameLoopState`) — обидва прибрані. Правило, яке з цього лишається: параметр
+конструктора отримує стан лише тоді, коли **сам цей клас** ним реально користується
+(наприклад, `_stateMachine` лишається в `BootstrapState`/`LoadLevelState`, бо вони самі
+ініціюють перехід в наступний стан через `Enter<TState>()`) — а не "про запас", бо
+"стан взагалі має вміти так". Незайнята залежність у сигнатурі — прихована брехня для
+того, хто читає код: він думає, що клас цим користується, а він ні. `GameLoopState`
+поверне собі `GameStateMachine` в уроці 13, коли реально почне сам ініціювати переходи
+в `VictoryState`/`GameOverState`.

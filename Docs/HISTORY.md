@@ -314,3 +314,260 @@ public void Enter<TState, TPayload>(TPayload payload) where TState : class, IPay
 `BootstrapState.Enter()` → (через `Enter<LoadLevelState, string>`) `LoadLevelState.Enter()`
 → (через `onLoaded` → `Enter<GameLoopState>`) `GameLoopState.Enter()`. Це і є та сама
 послідовність, яку підтвердили логи в Play Mode на початку розділу.
+
+---
+
+## Урок 02 — Service Locator і перший сервіс (`IAssetProvider`)
+
+Завершено й підтверджено в Play Mode 2026-09-08: повний ланцюжок у Console — реєстрація
+сервісу, побудова всіх станів, `Enter BootstrapState → Enter LoadLevelState → Enter
+GameLoopState`, і в `GameLoopState` реальні `Loaded TestObject` / `Spawning TestObject`
+без винятків.
+
+Мета уроку: центральний реєстр сервісів (`AllServices`) і перший сервіс у ньому —
+провайдер над `Resources`. Той самий вхід, що й в уроці 01 (`GameBootstrapper.Awake()`),
+але тепер конструктори по дорозі приймають і прокидують ще одну залежність —
+`AllServices`. Класи, вже розглянуті в уроці 01, тут лише згадуються (без повторного
+занурення), якщо їхній код не змінився по суті.
+
+### Точка входу: та сама, `GameBootstrapper.Awake()`
+
+Код не змінився з уроку 01. Перший рядок, як і раніше, створює `Game`.
+
+**→ Занурюємось у `Game`** (`Infrastructure/Game.cs`) — код цього класу змінився:
+
+```csharp
+public class Game
+{
+    public GameStateMachine StateMachine {get;}
+
+    public Game(ICoroutineRunner coroutineRunner, LoadingCurtain curtain)
+    {
+        SceneLoader sceneLoader = new SceneLoader(coroutineRunner);
+        StateMachine = new GameStateMachine(sceneLoader, curtain, AllServices.Instance);
+    }
+}
+```
+
+Перший рядок конструктора (`SceneLoader`) — уже знайомий з уроку 01, повторно не
+занурюємось. Другий рядок тепер передає в `GameStateMachine` третій аргумент —
+`AllServices.Instance`. Це перше звернення до нового класу цього уроку.
+
+**→ Занурюємось у `AllServices`** (`Infrastructure/Services/AllServices.cs`) — Service
+Locator, центральний реєстр сервісів гри:
+
+```csharp
+public class AllServices
+{
+    private readonly Dictionary<Type, IService> _services;
+
+    public static AllServices Instance { get; } = new AllServices();
+
+    private AllServices()
+    {
+        _services = new Dictionary<Type, IService>();
+    }
+
+    public void RegisterService<TService>(TService service) where TService : class, IService
+    {
+        _services.Add(typeof(TService), service);
+        Debug.Log($"[Services] Registered service of type {typeof(TService).Name}");
+    }
+
+    public TService GetService<TService>() where TService : class, IService
+    {
+        var service = _services[typeof(TService)] as TService;
+        return service;
+    }
+}
+```
+
+Конструктор приватний, а `Instance` — публічна `static`-властивість, ініціалізована
+одразу при першому зверненні до класу (eager singleton): рівно один інстанс на все
+життя гри, і ніхто інший не може створити другий. `RegisterService<TService>`/
+`GetService<TService>` — обидва generic з обмеженням `where TService : class, IService`,
+всередині — звичайний `Dictionary<Type, IService>` (той самий прийом "тип як ключ", що
+й `_states` у `GameStateMachine` уроку 01, тільки тут ключем реєструється сервіс).
+`Instance.` — це єдиний публічний статичний доступ, дозволений у всьому проєкті (свідомий,
+вузький виняток із заборони на статичні синглтони з уроку 01) — і викликається лише в
+трьох місцях: тут (`Game`), і далі нижче (`GameStateMachine`, `BootstrapState`).
+Залежностей у самого `AllServices` більше немає.
+
+**→ Занурюємось у `IService`** (`Infrastructure/Services/IService.cs`) — маркерний
+інтерфейс, використаний як generic-обмеження вище:
+
+```csharp
+public interface IService { }
+```
+
+Жодного методу — сам факт реалізації цього інтерфейсу і є вся інформація, яку він несе:
+"цей клас можна класти в `AllServices`". Без нього `RegisterService<TService>` довелось
+би або приймати `object` (втрата типобезпеки), або обмежувати generic-параметр чимось
+конкретним (втрата гнучкості для різних сервісів). Залежностей немає.
+
+**← Повертаємось до `Game`.** Конструктор `Game` завершено: `StateMachine` зібраний,
+переданий `AllServices.Instance` разом із уже знайомими `sceneLoader`/`curtain`.
+
+**← Повертаємось до `GameBootstrapper.Awake()`**, тепер уже в `GameStateMachine` —
+
+**→ Занурюємось у `GameStateMachine`** (`Infrastructure/States/GameStateMachine.cs`) —
+сигнатура конструктора й тіло змінились відносно уроку 01:
+
+```csharp
+public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain, AllServices services)
+{
+    _states = new Dictionary<Type, IExitableState>();
+    _states.Add(typeof(BootstrapState), new BootstrapState(this, services));
+    _states.Add(typeof(LoadLevelState), new LoadLevelState(this, sceneLoader, loadingCurtain));
+    IAssetProvider assetProvider = services.GetService<IAssetProvider>();
+    _states.Add(typeof(GameLoopState), new GameLoopState(assetProvider));
+    Debug.Log($"[FSM] {GetType().Name} created {_states[typeof(BootstrapState)].GetType().Name} " +
+              $"{_states[typeof(LoadLevelState)].GetType().Name} " +
+              $"{_states[typeof(GameLoopState)].GetType().Name} states");
+}
+```
+
+`sceneLoader`/`loadingCurtain` — уже знайомі, просто прокинуті далі в `LoadLevelState`
+(код `LoadLevelState` не змінився з уроку 01, не занурюємось повторно). Новий параметр
+— `services`, той самий `AllServices.Instance`, щойно розглянутий вище. Перший рядок
+створює `BootstrapState`, передаючи йому `this` (сам `GameStateMachine`) і `services`.
+
+**→ Занурюємось у `BootstrapState`** (`Infrastructure/States/BootstrapState.cs`) —
+конструктор і тіло цього уроку:
+
+```csharp
+public class BootstrapState : IState
+{
+    private const string SceneName  =  "Level_Arena";
+
+    private readonly GameStateMachine _stateMachine;
+    private readonly AllServices _services;
+
+    public BootstrapState(GameStateMachine gameStateMachine, AllServices services)
+    {
+        _stateMachine = gameStateMachine;
+        _services = services;
+        RegisterServices();
+    }
+
+    public void Enter()
+    {
+        Debug.Log($"[FSM] Enter {GetType().Name}");
+        Debug.Log($"[FSM] {GetType().Name} initiated enter LoadLevelState");
+        _stateMachine.Enter<LoadLevelState, string>(SceneName);
+    }
+
+    private void RegisterServices()
+    {
+        AssetProvider assetProvider = new AssetProvider();
+        Debug.Log($"[FSM] {GetType().Name} initiated registration of a new service {assetProvider.GetType().Name}");
+        _services.RegisterService<IAssetProvider>(assetProvider);
+    }
+
+    public void Exit() { /* TODO */ }
+}
+```
+
+`_stateMachine` — уже знайомий. `_services` — щойно розглянутий `AllServices`.
+Конструктор одразу, у собі самому, викликає `RegisterServices()` — реєстрація
+відбувається до того, як `Enter()` взагалі буде викликано, бо `GameStateMachine`
+будує всі три стани одразу у своєму конструкторі (той самий порядок, що і в уроці 01),
+і `BootstrapState` там перший — реєстрація встигає до того, як нижче по цьому ж
+конструктору `GameStateMachine` спробує дістати `IAssetProvider` для `GameLoopState`.
+`RegisterServices()` створює новий `AssetProvider` — перше звернення до нового класу.
+
+**→ Занурюємось у `AssetProvider`/`IAssetProvider`**
+(`Infrastructure/AssetManagement/AssetProvider.cs` та поруч) — Provider-патерн над
+`Resources`:
+
+```csharp
+public interface IAssetProvider : IService
+{
+    public GameObject LoadAsset(string assetPath);
+    public GameObject SpawnAsset(GameObject asset);
+    public GameObject SpawnAsset(GameObject asset, Vector3 position, Quaternion rotation);
+}
+
+public class AssetProvider : IAssetProvider
+{
+    public GameObject LoadAsset(string assetPath)
+    {
+        GameObject asset = Resources.Load<GameObject>(assetPath);
+        if (asset != null)
+            Debug.Log($"[AssetProvider] Loaded {assetPath}");
+        else
+            Debug.LogError($"[AssetProvider] Failed to load {assetPath}");
+        return asset;
+    }
+
+    public GameObject SpawnAsset(GameObject asset)
+    {
+        Debug.Log($"[AssetProvider] Spawning {asset.name}");
+        GameObject spawnAsset = Object.Instantiate(asset);
+        return spawnAsset;
+    }
+
+    public GameObject SpawnAsset(GameObject asset, Vector3 position, Quaternion rotation)
+    {
+        Debug.Log($"[AssetProvider] Spawning {asset.name} with position {position} and rotation {rotation}");
+        GameObject spawnAsset = Object.Instantiate(asset, position, rotation);
+        return spawnAsset;
+    }
+}
+```
+
+`IAssetProvider : IService` — успадковує маркер, тому щойно створений `assetProvider`
+можна зареєструвати як `IAssetProvider` без додаткового каста. `LoadAsset` — тонка
+обгортка над `Resources.Load<GameObject>`, з логом успіху/невдачі. Обидва `SpawnAsset` —
+обгортки над `Object.Instantiate`, повертають саме результат інстанціювання (а не
+вхідний `asset`-референс — рання версія цього коду помилково повертала сам префаб,
+виправлено під час рев'ю). Залежностей, крім `UnityEngine`, немає.
+
+**← Повертаємось до `BootstrapState.RegisterServices()`.** `assetProvider` створено,
+`_services.RegisterService<IAssetProvider>(assetProvider)` кладе його в реєстр —
+конструктор `BootstrapState` завершено.
+
+**← Повертаємось до `GameStateMachine`.** `BootstrapState` доданий у `_states`. Другий
+рядок — `LoadLevelState`, код і залежності якого не змінились з уроку 01 (повторно не
+занурюємось). Третій рядок — новий: `services.GetService<IAssetProvider>()` дістає з
+реєстру щойно зареєстрований `assetProvider` і передає його в `GameLoopState`.
+
+**→ Занурюємось у `GameLoopState`** (`Infrastructure/States/GameLoopState.cs`) — цей
+урок уперше наповнює цей стан реальною логікою:
+
+```csharp
+public class GameLoopState : IState
+{
+    private readonly IAssetProvider _assetProvider;
+    private readonly string _assetPath = "TestObject";
+
+    public GameLoopState(IAssetProvider assetProvider)
+    {
+        _assetProvider = assetProvider;
+    }
+
+    public void Enter()
+    {
+        Debug.Log($"[FSM] Enter {GetType().Name}");
+        var obj = _assetProvider.LoadAsset(_assetPath);
+        _assetProvider.SpawnAsset(obj, Vector3.one, Quaternion.identity);
+    }
+
+    public void Exit() { }
+}
+```
+
+Єдина залежність — `IAssetProvider`, уже знайомий (той самий `assetProvider`, щойно
+зареєстрований і діставаний вище). В уроці 01 цей клас нічого не робив у `Enter()`,
+крім логу; тепер він через уже знайомий `_assetProvider` завантажує тестовий префаб
+(`Resources/TestObject.prefab`) і спавнить його в точці `Vector3.one`.
+
+**← Повертаємось до `GameStateMachine`.** Усі три стани зареєстровано, конструктор
+завершено новим логом (`created BootstrapState LoadLevelState GameLoopState states`).
+Методи `Enter<TState>()`/`Enter<TState, TPayload>()` не змінились з уроку 01.
+
+**← Повертаємось до `Game`, тоді до `GameBootstrapper.Awake()`.** Решта головної лінії —
+`DontDestroyOnLoad(this)` і `_game.StateMachine.Enter<BootstrapState>()` — не змінилась
+з уроку 01. Але тепер сам прохід `BootstrapState.Enter()` → `LoadLevelState.Enter()` →
+`GameLoopState.Enter()` завершується реальною дією (спавн `TestObject`), а не тільки
+логом переходу — це і підтвердили логи в Play Mode на початку розділу.

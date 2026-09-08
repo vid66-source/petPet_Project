@@ -73,11 +73,15 @@ result — never to write the feature for them.
 - `Docs/Notes/` — one file per raw C#/Unity language or platform mechanic the student was
   unfamiliar with the first time it came up (generics, delegates/`Action`, coroutines,
   `DontDestroyOnLoad`, etc.) — not architecture patterns (`Docs/PATTERNS.md`) and not
-  how-the-project-was-built (`Docs/HISTORY.md`). Write a new note (or update an existing
-  one) the moment such a mechanic gets explained in chat — same "don't wait for the lesson
-  to finish" timing as `Docs/CV_LOG.md` updates, no Play Mode gate (this is reference
-  material, not a claim of finished work). Ground examples in the project's real code where
-  possible. Keep `Docs/Notes/README.md` (the index) in sync when adding a file.
+  how-the-project-was-built (`Docs/HISTORY.md`). Explain the mechanic in chat the moment it
+  comes up, same "don't wait for the lesson to finish" timing as `Docs/CV_LOG.md` updates —
+  but **do not create the file automatically**. **Correction, 2026-09-06:** the student
+  stopped this ("нотаток цей не дуже потрібен... давай я буду казати, на що треба нотатки,
+  і тільки після цього ти будеш заводити") — wait for the student to explicitly ask for a
+  note on that specific topic before writing `Docs/Notes/NN.md`. No Play Mode gate once a
+  note is actually requested (this is reference material, not a claim of finished work).
+  Ground examples in the project's real code where possible. Keep `Docs/Notes/README.md`
+  (the index) in sync when adding a file.
   **Source of topics is the student's actual past questions, NOT `Docs/CV_LOG.md`**
   (that's a broader skills/résumé log, not a question log, and includes unrelated things
   like other GitHub repos — the student explicitly corrected this confusion once already).
@@ -167,6 +171,21 @@ From the user directly: give the fishing rod, not the fish.
 - Do not write the concrete class bodies the lesson is asking the student to produce. A
   short isolated snippet illustrating a *pattern shape* (not the assignment's solution) is
   fine when asked to clarify something.
+- **Correction, 2026-09-05 (lesson 02 draft):** even a full interface/class code block
+  counts as "the fish" when writing it involves an actual design decision (method names,
+  generic constraints, overloads vs. default parameters) — the student caught this when
+  lesson 02 handed `AllServices`' exact method signatures ready to fill bodies into.
+  Interfaces that are pure, undebatable contracts (like the three-line `IState` family in
+  lesson 01) are still fine to show in full — there's no decision left to make once you've
+  decided the shape. But wherever there's a real choice to make (a concrete class's public
+  API, an interface with more than one plausible shape), describe the required behavior in
+  prose instead and name the specific things the code must accomplish and any known Unity
+  API to call (naming `Resources.Load`/`Object.Instantiate` is fine — that's "which tool",
+  not "how to use it"), then let the student produce the actual signature. When a genuine
+  C#/Unity syntax mechanic needs explaining to make that possible (generics, `where`,
+  optional parameters, marker interfaces), link to the relevant `Docs/Notes/*` file instead
+  of re-explaining it inline in the lesson — write that note first if it doesn't exist yet.
+  See `Docs/Lessons/02_asset_provider.md` (post-correction version) as the template.
 - Every lesson should end with something playable/testable in Play Mode, not just code that
   compiles.
 - Keep scope pinned to the mini-GDD in `Docs/ROADMAP.md` §1. If the user proposes an

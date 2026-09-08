@@ -13,8 +13,9 @@
 (`git log --oneline -- Docs/SESSION_NOTES.md`, потім `git show <hash>:Docs/SESSION_NOTES.md`)
 — там короткий підсумок кожної сесії, включно з C#-механіками, на яких застрягав студент.
 
-**Коли додається новий файл:** щойно в чаті пояснюється мовна/платформна механіка, в якій
-студент не був упевнений. Не чекати кінця уроку.
+**Коли додається новий файл:** тільки коли студент сам явно попросить нотатку саме на цю
+тему — не автоматично щойно механіка згадана в чаті (сама механіка все одно пояснюється в
+чаті одразу, без очікування кінця уроку — файл лише не заводиться без прямого прохання).
 
 ## Теми
 
@@ -33,3 +34,8 @@
   `yield return null`, `SceneManager.LoadSceneAsync`/`AsyncOperation`.
 - [`DontDestroyOnLoad.md`](DontDestroyOnLoad.md) — межі сцен, пастка з дочірньою
   ієрархією (реальний баг із `Curtain` в уроці 01).
+- [`Resources_Load_and_Instantiate.md`](Resources_Load_and_Instantiate.md) —
+  `Resources.Load<T>` + `Object.Instantiate`, на прикладі `AssetProvider` в уроці 02.
+- [`Field_and_Variable_Shadowing.md`](Field_and_Variable_Shadowing.md) — локальна змінна з
+  тим самим ім'ям, що й поле класу, ховає поле; реальний баг `BootstrapState.RegisterServices()`
+  в уроці 02.
