@@ -70,6 +70,16 @@ result — never to write the feature for them.
   `GameStateMachine` → dive into state contracts → dive into each of
   `BootstrapState`/`LoadLevelState` (which itself dives into `LoadingCurtain`)/`GameLoopState`
   → surface all the way back to `Awake()` to close the walk).
+- `Docs/ARCHITECTURE.md` — living current-state dependency tree/diagram (not a
+  per-lesson narrative like `HISTORY.md` — only "what the project looks like right
+  now"). ASCII diagrams in `<pre>` blocks (Calibre-safe, per the code-format rule
+  below): a construction tree (who creates whom, from `GameBootstrapper.Awake()`
+  down), the `AllServices` register/resolve hub, and runtime event-subscription
+  links, followed by a short thesis-style per-class list (dependencies, what it
+  creates/registers, key methods/events, where instances/values flow). Same
+  completion gate and update timing as `PATTERNS.md`/`HISTORY.md`/`CV_LOG.md` — update
+  it right alongside those three at the end of a lesson's review (workflow B step 5),
+  reflecting the real final code.
 - `Docs/Notes/` — one file per raw C#/Unity language or platform mechanic the student was
   unfamiliar with the first time it came up (generics, delegates/`Action`, coroutines,
   `DontDestroyOnLoad`, etc.) — not architecture patterns (`Docs/PATTERNS.md`) and not
@@ -117,6 +127,55 @@ result — never to write the feature for them.
   its code into `Docs/Lessons/*.md`, never show it to the user directly, never let a lesson
   spec become "reimplement this file" — specs stay interface/responsibility descriptions,
   not solutions.
+
+## Формат коду в документах — `<pre>`, не ``` -огорожі
+
+Студент читає всі файли в `Docs/` (нотатки, `HISTORY.md`, `PATTERNS.md`,
+`SESSION_NOTES.md`, уроки) через **Calibre e-book viewer**, а не через GitHub/VS
+Code. Виявлено (2026-09-12, зі скріншотом): цей рендерер трактує звичайний
+markdown-параграф буквально — кілька рядків підряд **без порожнього рядка між
+ними** зливаються в один суцільний рядок (кожен `\n` всередині "абзацу" ігнорується,
+як і належить за специфікацією markdown, коли рендерер не бачить блок як щось
+особливе). Огорожа-трійна лапка (```` ``` ````) в цьому рендерері **не розпізнається**
+як код-блок — тому весь код колом них теж зливається в кашу, включно з
+відступами/переносами всередині методів. Просто дефіси-роздільники навколо
+``` -блоку (перша спроба, того ж дня) **не рятують**, якщо самі дефіси і огорожа
+стоять поспіль без порожніх рядків — усе одно один абзац.
+
+**Правильний і перевірений формат** — сирий HTML `<pre>...</pre>` замість
+```` ``` ````-огорожі. `<pre>` — базовий HTML-тег, який будь-який markdown-конвертер
+(включно з тим, що використовує Calibre) пропускає без переробки: переноси рядків і
+пробіли-відступи всередині гарантовано зберігаються, незалежно від того, чи вміє
+конкретний рендерер у ```` ``` ````-синтаксис. Це працює навіть якщо всередині коду є
+порожні рядки (CommonMark спеціально не завершує `<pre>`-блок на порожньому рядку,
+на відміну від звичайних HTML-блоків — завершує тільки `</pre>`).
+
+Шаблон для кожного фрагмента коду в будь-якому файлі `Docs/**/*.md`:
+
+<pre>
+------------------------------ КОД ------------------------------
+&lt;pre&gt;
+[код тут, як є — з реальними відступами]
+&lt;/pre&gt;
+--------------------------------------------------------------------
+</pre>
+
+Правила:
+- Дефісні рядки ("------ КОД ------" зверху, суцільний "------" знизу) — окремий
+  однорядковий абзац, для візуального відокремлення навіть якщо рендерер взагалі не
+  зрозуміє HTML. `<pre>`/`</pre>` — теж кожен на власному рядку.
+- Символи `&`, `<`, `>` усередині коду (дженерики `Action<T>`, `=>`, `!=` тощо) —
+  екранувати як `&amp;`, `&lt;`, `&gt;`, інакше рендерер прийме їх за розмітку.
+- Мовний тег (`csharp` після старої огорожі) більше не потрібен — `<pre>` не дає
+  підсвітки синтаксису, тож сенсу його лишати нема.
+- Якщо фрагмент коду лежить усередині пункту списку (list item) — і роздільники, і
+  `<pre>`/`</pre>` мають той самий відступ, що й continuation-текст цього пункту
+  (типово 2 пробіли), інакше markdown-парсер може розірвати список. Рядки самого коду
+  можуть мати більший відступ (це вже їхній C#-відступ) — його не чіпати.
+- Стосується **всіх** файлів у `Docs/` з кодом: `Docs/Notes/*.md`, `Docs/HISTORY.md`,
+  `Docs/PATTERNS.md`, `Docs/SESSION_NOTES.md`, `Docs/Lessons/*.md` — не лише нотаток.
+  Застосовувати цей формат одразу під час першого написання нового фрагмента коду в
+  будь-якому з цих файлів, а не лише заднім числом.
 
 ## Student baseline — teach OOP/patterns/SOLID almost from scratch
 
@@ -264,8 +323,9 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
    Play Mode — only then: add that lesson's pattern(s) to `Docs/PATTERNS.md` (full
    explanation + real excerpts from their code), append that lesson's section to
    `Docs/HISTORY.md` (every class/interface, from the real final code — see "Where the
-   state lives" above for both), and bump any matching `Docs/CV_LOG.md` entries from
-   `[у коді]` to `[перевірено]`. Then move to workflow A for the next lesson.
+   state lives" above for both), bump any matching `Docs/CV_LOG.md` entries from
+   `[у коді]` to `[перевірено]`, and update `Docs/ARCHITECTURE.md`'s diagrams/thesis
+   list to the new current state. Then move to workflow A for the next lesson.
 6. If the session ends right after this (before the next lesson is written), update
    `Docs/SESSION_NOTES.md` to say so — otherwise workflow A's step 2 above.
 

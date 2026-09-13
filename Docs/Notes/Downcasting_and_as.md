@@ -16,32 +16,36 @@
 ## Ізольований приклад — `ModeSwitcher`/`IdleMode`
 
 Форма, яку варто впізнавати:
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 IMode _activeMode;
 
-void SwitchTo<TMode>() where TMode : class, IMode
+void SwitchTo&lt;TMode&gt;() where TMode : class, IMode
 {
     _activeMode?.Exit();
     TMode newMode = _modes[typeof(TMode)] as TMode;
     _activeMode = newMode;
     newMode?.Enter();
 }
-```
+</pre>
+------------------------------------------------------------
 Це той самий алгоритм, що й у `GameStateMachine.Enter<TState>()` — не копіювати один в
 один із проєктного коду, а впізнавати форму: дістати з колекції загальнішим типом →
 downcast до конкретного → присвоїти активним → викликати метод.
 
 ## Реальний код — `GameStateMachine.cs`
 
-```csharp
-public void Enter<TState>() where TState : class, IState
+--------------------------- КОД ---------------------------
+<pre>
+public void Enter&lt;TState&gt;() where TState : class, IState
 {
     _currentState?.Exit();
     TState newState = _states[typeof(TState)] as TState;
     _currentState = newState;
     newState?.Enter();
 }
-```
+</pre>
+------------------------------------------------------------
 
 - `_states[typeof(TState)]` — індексатор `Dictionary<Type, IExitableState>` завжди
   повертає статичний тип `IExitableState` (тип значення словника), незалежно від того, що

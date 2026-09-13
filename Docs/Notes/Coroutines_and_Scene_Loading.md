@@ -27,7 +27,8 @@
 
 ## Корутина, яка чекає завершення
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 private IEnumerator LoadScene(string sceneName, Action onLoaded)
 {
     AsyncOperation sceneLoadOperation = SceneManager.LoadSceneAsync(sceneName);
@@ -37,7 +38,8 @@ private IEnumerator LoadScene(string sceneName, Action onLoaded)
     }
     onLoaded?.Invoke();
 }
-```
+</pre>
+------------------------------------------------------------
 
 `IEnumerator` — стандартний .NET-інтерфейс для ітераторів, але Unity використовує його
 по-особливому для корутин через `MonoBehaviour.StartCoroutine` (звідси й
@@ -53,12 +55,13 @@ private IEnumerator LoadScene(string sceneName, Action onLoaded)
 `SceneLoader` — чистий C#-клас (не `MonoBehaviour`), а корутини Unity вміє запускати
 тільки `MonoBehaviour`. Тому `SceneLoader` просить про це через абстракцію
 (`ICoroutineRunner`), а не стає сам `MonoBehaviour` і не шукає когось напряму. Детальніше
-— [`Delegates_and_Action.md`](Delegates_and_Action.md) (як передається колбек
-`onLoaded`, викликаний саме тут, у кінці корутини) і `Docs/PATTERNS.md` (DIP).
+— [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) (як
+передається колбек `onLoaded`, викликаний саме тут, у кінці корутини) і
+`Docs/PATTERNS.md` (DIP).
 
 ## Пов'язане
 
-- [`Delegates_and_Action.md`](Delegates_and_Action.md) — `onLoaded`, який викликається
-  тут після завершення завантаження.
+- [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) —
+  `onLoaded`, який викликається тут після завершення завантаження.
 - [`DontDestroyOnLoad.md`](DontDestroyOnLoad.md) — що стається з об'єктами сцени під час
   цього завантаження.

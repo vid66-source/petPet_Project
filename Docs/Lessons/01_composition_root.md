@@ -59,11 +59,13 @@ Composition Root вирішує всі три: залежності видно �
 
 Три інтерфейси (можна в одному файлі — вони завжди йдуть разом):
 
-```
+--------------------------- КОД ---------------------------
+<pre>
 IExitableState { void Exit(); }
 IState : IExitableState { void Enter(); }
-IPayloadedState<TPayload> : IExitableState { void Enter(TPayload payload); }
-```
+IPayloadedState&lt;TPayload&gt; : IExitableState { void Enter(TPayload payload); }
+</pre>
+------------------------------------------------------------
 
 **Чому три, а не один `IState` з опціональним payload?** Interface Segregation Principle:
 стан без параметра (`GameLoopState`) не повинен бути змушений реалізовувати
@@ -147,9 +149,11 @@ LSP — `GameStateMachine.Enter<TState>()` працює з будь-яким `IS
 
 ### 3. `Infrastructure/ICoroutineRunner.cs`
 
-```
+--------------------------- КОД ---------------------------
+<pre>
 ICoroutineRunner { Coroutine StartCoroutine(IEnumerator routine); }
-```
+</pre>
+------------------------------------------------------------
 
 **Навіщо, якщо є `MonoBehaviour.StartCoroutine`?** `SceneLoader` (нижче) — чистий C#-клас, а
 корутини Unity вміє запускати тільки `MonoBehaviour`. Цей інтерфейс — тонка абстракція, яка

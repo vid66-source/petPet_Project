@@ -117,7 +117,7 @@
 - [x] `00_project_setup.md` — пакети, налаштування проєкту, скелет папок, сцени
 - [x] `01_composition_root.md` — `Game`, `GameBootstrapper`, `IExitableState`/`IState`, `GameStateMachine`
 - [x] `02_asset_provider.md` — `IService`, `AllServices`, перший сервіс (`IAssetProvider` над `Resources`)
-- [ ] `03_service_locator_and_input.md` — `IInputService` (Strategy над новим Input System) як другий
+- [x] `03_service_locator_and_input.md` — `IInputService` (Strategy над новим Input System) як другий
       сервіс у контейнері, щоб на конкретному прикладі закріпити "етику роботи із сервісами".
       Опційне ДЗ із зірочкою: (а) накидати lifecycle/dispose для сервісів, (б) спробувати
       constructor-only авто-резолвер залежностей

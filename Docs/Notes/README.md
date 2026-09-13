@@ -26,8 +26,11 @@
   `GameStateMachine.Enter<TState>()`.
 - [`Downcasting_and_as.md`](Downcasting_and_as.md) — upcast/downcast, оператор `as` проти
   прямого касту, на прикладі `_states[typeof(TState)] as TState`.
-- [`Delegates_and_Action.md`](Delegates_and_Action.md) — делегати, `Action`, method group
-  conversion, на прикладі `onLoaded` у `SceneLoader`/`LoadLevelState`.
+- [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) —
+  делегати (`Action`/`Action<T>`/`Func`), method group conversion, `event`,
+  підписка/відписка (`+=`/`-=`), подія з параметром, кілька подій на одному об'єкті
+  (`started`/`performed`/`canceled`), інші форми подій (`EventHandler`, `UnityEvent`);
+  на прикладах `onLoaded` (урок 01) і `IInputService` (урок 03).
 - [`Debug_Logging_and_Reflection.md`](Debug_Logging_and_Reflection.md) — `Debug.Log`,
   string interpolation, `GetType().Name`, читання стек-трейсів у Console.
 - [`Coroutines_and_Scene_Loading.md`](Coroutines_and_Scene_Loading.md) — `IEnumerator`,
@@ -39,3 +42,11 @@
 - [`Field_and_Variable_Shadowing.md`](Field_and_Variable_Shadowing.md) — локальна змінна з
   тим самим ім'ям, що й поле класу, ховає поле; реальний баг `BootstrapState.RegisterServices()`
   в уроці 02.
+- [`Input_System.md`](Input_System.md) — новий Input System: Action Map/Action/Binding/
+  Composite, `Button` vs `Value`, `Generate C# Class`, `.Enable()`, poll (`ReadValue<T>()`)
+  vs event (`.performed`/`CallbackContext`), на прикладі `Input Actions` asset'у уроку 03.
+- [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) —
+  поглиблено: `InputAction` без обгортки, `.started`/`.performed`/`.canceled` на різних
+  реальних прикладах (проста кнопка, аналогове значення, кілька біндингів, `Hold`
+  interaction), вкладений тип `CallbackContext`, коли він обов'язковий, коли підписку
+  на `InputAction`-подію треба відписувати, а коли ні.

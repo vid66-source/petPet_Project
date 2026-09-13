@@ -10,9 +10,11 @@ Unity. Приймає `object`, тому підходить будь-що з `To
 
 ## String interpolation (`$"..."`)
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 Debug.Log($"[FSM] Enter {GetType().Name}");
-```
+</pre>
+------------------------------------------------------------
 `$"..."` — рядок, усередині якого в фігурних дужках `{ }` можна писати будь-який вираз, і
 він підставиться як текст. Це те саме, що `"[FSM] Enter " + GetType().Name`, просто
 читабельніше — особливо коли виразів кілька.
@@ -33,15 +35,17 @@ Debug.Log($"[FSM] Enter {GetType().Name}");
 ## Читання стек-трейсу в Console
 
 Приклад із реального логу цього уроку:
-```
+--------------------------- КОД ---------------------------
+<pre>
 [FSM] Enter LoadLevelState
 UnityEngine.Debug:Log (object)
 CodeBase.Infrastructure.States.LoadLevelState:Enter (string) (at .../LoadLevelState.cs:22)
-CodeBase.Infrastructure.States.GameStateMachine:Enter<...LoadLevelState, string> (string) (at .../GameStateMachine.cs:39)
+CodeBase.Infrastructure.States.GameStateMachine:Enter&lt;...LoadLevelState, string&gt; (string) (at .../GameStateMachine.cs:39)
 CodeBase.Infrastructure.States.BootstrapState:Enter () (at .../BootstrapState.cs:19)
-CodeBase.Infrastructure.States.GameStateMachine:Enter<...BootstrapState> () (at .../GameStateMachine.cs:28)
+CodeBase.Infrastructure.States.GameStateMachine:Enter&lt;...BootstrapState&gt; () (at .../GameStateMachine.cs:28)
 CodeBase.Infrastructure.GameBootstrapper:Awake () (at .../GameBootstrapper.cs:16)
-```
+</pre>
+------------------------------------------------------------
 
 Стек-трейс читається **знизу вгору** — знизу те, що викликало все спочатку, зверху те, що
 виконувалось останнім (де стався сам `Debug.Log`):

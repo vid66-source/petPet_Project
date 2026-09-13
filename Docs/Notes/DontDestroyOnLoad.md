@@ -10,14 +10,16 @@
 має пережити цей перехід — сам `GameBootstrapper` і побудований ним граф об'єктів
 (`Game`, `GameStateMachine`, стани), інакше вся FSM обнулиться разом зі зміною сцени.
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 private void Awake()
 {
     _game = new Game(this, _curtain);
     DontDestroyOnLoad(this);
-    _game.StateMachine.Enter<BootstrapState>();
+    _game.StateMachine.Enter&lt;BootstrapState&gt;();
 }
-```
+</pre>
+------------------------------------------------------------
 
 `DontDestroyOnLoad(this)` (де `this` — сам `GameBootstrapper`, тобто його GameObject)
 позначає той конкретний GameObject незнищуваним при зміні сцени.

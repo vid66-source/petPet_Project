@@ -39,7 +39,8 @@
 гру, фізичний Composition Root: точка, де Unity-світ торкається чистого C#-світу. Лежить
 на GameObject `Bootstraper` у сцені `Bootstrap`.
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class GameBootstrapper : MonoBehaviour, ICoroutineRunner
 {
     [SerializeField] private LoadingCurtain _curtain;
@@ -49,10 +50,11 @@ public class GameBootstrapper : MonoBehaviour, ICoroutineRunner
     {
         _game = new Game(this, _curtain);
         DontDestroyOnLoad(this);
-        _game.StateMachine.Enter<BootstrapState>();
+        _game.StateMachine.Enter&lt;BootstrapState&gt;();
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 `_curtain` — серіалізована залежність, перетягнута в інспекторі Unity (компонент на
 дочірньому GameObject `Image` під `Curtain`). Три рядки `Awake()` — це вся головна лінія
@@ -61,7 +63,8 @@ public class GameBootstrapper : MonoBehaviour, ICoroutineRunner
 **→ Занурюємось у `Game`** (`Infrastructure/Game.cs`) — кореневий не-`MonoBehaviour`
 об'єкт гри, навмисно "тупий", без ігрової логіки:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class Game
 {
     public GameStateMachine StateMachine { get; }
@@ -72,7 +75,8 @@ public class Game
         StateMachine = new GameStateMachine(sceneLoader, curtain);
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Конструктор `Game` створює дві залежності по черзі. Перша — `SceneLoader`.
 
@@ -80,11 +84,12 @@ public class Game
 одне: асинхронно завантажити сцену Unity і повідомити колбеком, коли готово; не знає
 нічого про стани, гру чи UI:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class SceneLoader
 {
     private readonly ICoroutineRunner _coroutineRunner;
-    public SceneLoader(ICoroutineRunner coroutineRunner) => _coroutineRunner = coroutineRunner;
+    public SceneLoader(ICoroutineRunner coroutineRunner) =&gt; _coroutineRunner = coroutineRunner;
 
     public void Load(string sceneName, Action onLoaded = null)
     {
@@ -101,15 +106,18 @@ public class SceneLoader
         onLoaded?.Invoke();
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 `SceneLoader` сам залежить лише від `ICoroutineRunner`.
 
 **→ Занурюємось у `ICoroutineRunner`** (`Infrastructure/ICoroutineRunner.cs`):
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public interface ICoroutineRunner { Coroutine StartCoroutine(IEnumerator coroutine); }
-```
+</pre>
+------------------------------------------------------------
 
 Це абстракція над "умінням запускати корутини" — щоб `SceneLoader` (сам не
 `MonoBehaviour`) міг попросити про це, не знаючи, хто саме виконає. Реалізує його той
@@ -129,22 +137,24 @@ public interface ICoroutineRunner { Coroutine StartCoroutine(IEnumerator corouti
 **→ Занурюємось у `GameStateMachine`** (`Infrastructure/States/GameStateMachine.cs`) —
 Context у State pattern, тримає всі стани гри й перемикає активний:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class GameStateMachine
 {
-    private readonly Dictionary<Type, IExitableState> _states;
+    private readonly Dictionary&lt;Type, IExitableState&gt; _states;
     private IExitableState _currentState;
 
     public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain)
     {
-        _states = new Dictionary<Type, IExitableState>();
+        _states = new Dictionary&lt;Type, IExitableState&gt;();
         _states.Add(typeof(BootstrapState), new BootstrapState(this, sceneLoader));
         _states.Add(typeof(LoadLevelState), new LoadLevelState(this, sceneLoader, loadingCurtain));
         _states.Add(typeof(GameLoopState), new GameLoopState(this));
     }
-    // Enter<TState>() / Enter<TState, TPayload>() — див. нижче, після виконавців
+    // Enter&lt;TState&gt;() / Enter&lt;TState, TPayload&gt;() — див. нижче, після виконавців
 }
-```
+</pre>
+------------------------------------------------------------
 
 `sceneLoader` тут — уже знайомий об'єкт (той самий, щойно розглянутий вище, просто
 прокинутий далі), повторно не занурюємось. Але тип значень словника,
@@ -154,11 +164,13 @@ public class GameStateMachine
 **→ Занурюємось у контракти станів** (`IExitableState`/`IState`/`IPayloadedState<TPayload>`
 — `Infrastructure/States/IState.cs` та поруч):
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public interface IExitableState { void Exit(); }
 public interface IState : IExitableState { void Enter(); }
-public interface IPayloadedState<TPayload> : IExitableState { void Enter(TPayload payload); }
-```
+public interface IPayloadedState&lt;TPayload&gt; : IExitableState { void Enter(TPayload payload); }
+</pre>
+------------------------------------------------------------
 
 `IExitableState` — найвужчий контракт, тільки `Exit()`; саме ним типізоване поле
 `_currentState` у `GameStateMachine`, бо це єдине, що гарантовано є в усіх станах
@@ -171,7 +183,8 @@ public interface IPayloadedState<TPayload> : IExitableState { void Enter(TPayloa
 **→ Занурюємось у `BootstrapState`** (`Infrastructure/States/BootstrapState.cs`) — перша
 фаза гри:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class BootstrapState : IState
 {
     private const string SceneName = "Level_Arena";
@@ -185,12 +198,13 @@ public class BootstrapState : IState
     public void Enter()
     {
         Debug.Log($"[FSM] Enter {GetType().Name}");
-        _stateMachine.Enter<LoadLevelState, string>(SceneName);
+        _stateMachine.Enter&lt;LoadLevelState, string&gt;(SceneName);
     }
 
     public void Exit() { /* TODO: сюди в уроках 02-03 переїде RegisterServices() */ }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Обидві залежності конструктора — `GameStateMachine` (той самий, що його й створив) і
 `SceneLoader` — уже знайомі з лінії вище, нового занурення не треба (`sceneLoader` тут
@@ -203,8 +217,9 @@ public class BootstrapState : IState
 **→ Занурюємось у `LoadLevelState`** (`Infrastructure/States/LoadLevelState.cs`) — показати
 завісу, завантажити сцену, сховати завісу, перейти далі:
 
-```csharp
-public class LoadLevelState : IPayloadedState<string>
+--------------------------- КОД ---------------------------
+<pre>
+public class LoadLevelState : IPayloadedState&lt;string&gt;
 {
     private readonly GameStateMachine _stateMachine;
     private readonly SceneLoader _sceneLoader;
@@ -224,11 +239,12 @@ public class LoadLevelState : IPayloadedState<string>
         _sceneLoader.Load(sceneName, onLoaded);
     }
 
-    private void onLoaded() => _stateMachine.Enter<GameLoopState>();
+    private void onLoaded() =&gt; _stateMachine.Enter&lt;GameLoopState&gt;();
 
-    public void Exit() => _loadingCurtain.Hide();
+    public void Exit() =&gt; _loadingCurtain.Hide();
 }
-```
+</pre>
+------------------------------------------------------------
 
 Перші дві залежності конструктора (`GameStateMachine`, `SceneLoader`) уже знайомі. Третя —
 `LoadingCurtain` — нова.
@@ -236,13 +252,15 @@ public class LoadLevelState : IPayloadedState<string>
 **→ Занурюємось у `LoadingCurtain`** (`Logic/LoadingCurtain.cs`) — візуальна "завіса", що
 ховає від гравця сам процес завантаження сцени, найдрібніший клас уроку:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class LoadingCurtain : MonoBehaviour
 {
-    public void Show() => gameObject.SetActive(true);
-    public void Hide() => gameObject.SetActive(false);
+    public void Show() =&gt; gameObject.SetActive(true);
+    public void Hide() =&gt; gameObject.SetActive(false);
 }
-```
+</pre>
+------------------------------------------------------------
 
 Залежностей немає (чистий `MonoBehaviour`). У сцені `Bootstrap` лежить на GameObject
 `Image` (дочірньому до `Curtain` — `Canvas`/`CanvasScaler`/`GraphicRaycaster`,
@@ -265,14 +283,16 @@ onLoaded)`, передаючи свій приватний метод `onLoaded`
 **→ Занурюємось у `GameLoopState`** (`Infrastructure/States/GameLoopState.cs`) — точка
 входу в геймплей, навмисно порожня, наповниться з уроку 04:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class GameLoopState : IState
 {
     public GameLoopState(GameStateMachine parent) { }
-    public void Enter() => Debug.Log($"[FSM] Enter {GetType().Name}");
+    public void Enter() =&gt; Debug.Log($"[FSM] Enter {GetType().Name}");
     public void Exit() { }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Єдина залежність — `GameStateMachine`, уже знайомий, поки не використовується всередині
 (той самий принцип однорідної сигнатури, що й у `BootstrapState`).
@@ -280,8 +300,9 @@ public class GameLoopState : IState
 **← Повертаємось до `GameStateMachine`.** Усі три стани зареєстровано в словнику, конструктор
 завершено. Лишились самі методи перемикання:
 
-```csharp
-public void Enter<TState>() where TState : class, IState
+--------------------------- КОД ---------------------------
+<pre>
+public void Enter&lt;TState&gt;() where TState : class, IState
 {
     _currentState?.Exit();
     TState newState = _states[typeof(TState)] as TState;
@@ -289,14 +310,15 @@ public void Enter<TState>() where TState : class, IState
     newState?.Enter();
 }
 
-public void Enter<TState, TPayload>(TPayload payload) where TState : class, IPayloadedState<TPayload>
+public void Enter&lt;TState, TPayload&gt;(TPayload payload) where TState : class, IPayloadedState&lt;TPayload&gt;
 {
     _currentState?.Exit();
     TState newState = _states[typeof(TState)] as TState;
     _currentState = newState;
     newState?.Enter(payload);
 }
-```
+</pre>
+------------------------------------------------------------
 
 Обидва — `Exit()` на поточному активному (якщо є) → дістати `TState` зі словника за
 `typeof(TState)` → зробити активним → `Enter()`/`Enter(payload)`. Ніяких нових залежностей
@@ -336,7 +358,8 @@ GameLoopState`, і в `GameLoopState` реальні `Loaded TestObject` / `Spaw
 
 **→ Занурюємось у `Game`** (`Infrastructure/Game.cs`) — код цього класу змінився:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class Game
 {
     public GameStateMachine StateMachine {get;}
@@ -347,7 +370,8 @@ public class Game
         StateMachine = new GameStateMachine(sceneLoader, curtain, AllServices.Instance);
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Перший рядок конструктора (`SceneLoader`) — уже знайомий з уроку 01, повторно не
 занурюємось. Другий рядок тепер передає в `GameStateMachine` третій аргумент —
@@ -356,31 +380,33 @@ public class Game
 **→ Занурюємось у `AllServices`** (`Infrastructure/Services/AllServices.cs`) — Service
 Locator, центральний реєстр сервісів гри:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class AllServices
 {
-    private readonly Dictionary<Type, IService> _services;
+    private readonly Dictionary&lt;Type, IService&gt; _services;
 
     public static AllServices Instance { get; } = new AllServices();
 
     private AllServices()
     {
-        _services = new Dictionary<Type, IService>();
+        _services = new Dictionary&lt;Type, IService&gt;();
     }
 
-    public void RegisterService<TService>(TService service) where TService : class, IService
+    public void RegisterService&lt;TService&gt;(TService service) where TService : class, IService
     {
         _services.Add(typeof(TService), service);
         Debug.Log($"[Services] Registered service of type {typeof(TService).Name}");
     }
 
-    public TService GetService<TService>() where TService : class, IService
+    public TService GetService&lt;TService&gt;() where TService : class, IService
     {
         var service = _services[typeof(TService)] as TService;
         return service;
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Конструктор приватний, а `Instance` — публічна `static`-властивість, ініціалізована
 одразу при першому зверненні до класу (eager singleton): рівно один інстанс на все
@@ -396,9 +422,11 @@ public class AllServices
 **→ Занурюємось у `IService`** (`Infrastructure/Services/IService.cs`) — маркерний
 інтерфейс, використаний як generic-обмеження вище:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public interface IService { }
-```
+</pre>
+------------------------------------------------------------
 
 Жодного методу — сам факт реалізації цього інтерфейсу і є вся інформація, яку він несе:
 "цей клас можна класти в `AllServices`". Без нього `RegisterService<TService>` довелось
@@ -413,19 +441,21 @@ public interface IService { }
 **→ Занурюємось у `GameStateMachine`** (`Infrastructure/States/GameStateMachine.cs`) —
 сигнатура конструктора й тіло змінились відносно уроку 01:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain, AllServices services)
 {
-    _states = new Dictionary<Type, IExitableState>();
+    _states = new Dictionary&lt;Type, IExitableState&gt;();
     _states.Add(typeof(BootstrapState), new BootstrapState(this, services));
     _states.Add(typeof(LoadLevelState), new LoadLevelState(this, sceneLoader, loadingCurtain));
-    IAssetProvider assetProvider = services.GetService<IAssetProvider>();
+    IAssetProvider assetProvider = services.GetService&lt;IAssetProvider&gt;();
     _states.Add(typeof(GameLoopState), new GameLoopState(assetProvider));
     Debug.Log($"[FSM] {GetType().Name} created {_states[typeof(BootstrapState)].GetType().Name} " +
               $"{_states[typeof(LoadLevelState)].GetType().Name} " +
               $"{_states[typeof(GameLoopState)].GetType().Name} states");
 }
-```
+</pre>
+------------------------------------------------------------
 
 `sceneLoader`/`loadingCurtain` — уже знайомі, просто прокинуті далі в `LoadLevelState`
 (код `LoadLevelState` не змінився з уроку 01, не занурюємось повторно). Новий параметр
@@ -435,7 +465,8 @@ public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain, 
 **→ Занурюємось у `BootstrapState`** (`Infrastructure/States/BootstrapState.cs`) —
 конструктор і тіло цього уроку:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class BootstrapState : IState
 {
     private const string SceneName  =  "Level_Arena";
@@ -454,19 +485,20 @@ public class BootstrapState : IState
     {
         Debug.Log($"[FSM] Enter {GetType().Name}");
         Debug.Log($"[FSM] {GetType().Name} initiated enter LoadLevelState");
-        _stateMachine.Enter<LoadLevelState, string>(SceneName);
+        _stateMachine.Enter&lt;LoadLevelState, string&gt;(SceneName);
     }
 
     private void RegisterServices()
     {
         AssetProvider assetProvider = new AssetProvider();
         Debug.Log($"[FSM] {GetType().Name} initiated registration of a new service {assetProvider.GetType().Name}");
-        _services.RegisterService<IAssetProvider>(assetProvider);
+        _services.RegisterService&lt;IAssetProvider&gt;(assetProvider);
     }
 
     public void Exit() { /* TODO */ }
 }
-```
+</pre>
+------------------------------------------------------------
 
 `_stateMachine` — уже знайомий. `_services` — щойно розглянутий `AllServices`.
 Конструктор одразу, у собі самому, викликає `RegisterServices()` — реєстрація
@@ -480,7 +512,8 @@ public class BootstrapState : IState
 (`Infrastructure/AssetManagement/AssetProvider.cs` та поруч) — Provider-патерн над
 `Resources`:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public interface IAssetProvider : IService
 {
     public GameObject LoadAsset(string assetPath);
@@ -492,7 +525,7 @@ public class AssetProvider : IAssetProvider
 {
     public GameObject LoadAsset(string assetPath)
     {
-        GameObject asset = Resources.Load<GameObject>(assetPath);
+        GameObject asset = Resources.Load&lt;GameObject&gt;(assetPath);
         if (asset != null)
             Debug.Log($"[AssetProvider] Loaded {assetPath}");
         else
@@ -514,7 +547,8 @@ public class AssetProvider : IAssetProvider
         return spawnAsset;
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 `IAssetProvider : IService` — успадковує маркер, тому щойно створений `assetProvider`
 можна зареєструвати як `IAssetProvider` без додаткового каста. `LoadAsset` — тонка
@@ -535,7 +569,8 @@ public class AssetProvider : IAssetProvider
 **→ Занурюємось у `GameLoopState`** (`Infrastructure/States/GameLoopState.cs`) — цей
 урок уперше наповнює цей стан реальною логікою:
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class GameLoopState : IState
 {
     private readonly IAssetProvider _assetProvider;
@@ -555,7 +590,8 @@ public class GameLoopState : IState
 
     public void Exit() { }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Єдина залежність — `IAssetProvider`, уже знайомий (той самий `assetProvider`, щойно
 зареєстрований і діставаний вище). В уроці 01 цей клас нічого не робив у `Enter()`,
@@ -571,3 +607,181 @@ public class GameLoopState : IState
 з уроку 01. Але тепер сам прохід `BootstrapState.Enter()` → `LoadLevelState.Enter()` →
 `GameLoopState.Enter()` завершується реальною дією (спавн `TestObject`), а не тільки
 логом переходу — це і підтвердили логи в Play Mode на початку розділу.
+
+---
+
+## Урок 03 — `IInputService`, другий сервіс і подія-переклад над Input System
+
+Завершено й підтверджено в Play Mode 2026-09-12: Console показує реєстрацію обох
+сервісів (`IAssetProvider`, `IInputService`) через `RegisterService<TService>` без
+жодної зміни в `AllServices`, повний прохід `Enter BootstrapState → Enter
+LoadLevelState → Enter GameLoopState`, і реальне натискання клавіші Jump викликає
+підписаний `GameLoopState.TestJump()` через увесь ланцюжок Unity Input System →
+`InputService.OnJumpPressed` → `GameLoopState`.
+
+Той самий вхід, що й в уроках 01-02 (`GameBootstrapper.Awake()` → `Game` —обидва без
+змін цього уроку). Зміни починаються в `GameStateMachine`.
+
+**→ Занурюємось у `GameStateMachine`** (`Infrastructure/States/GameStateMachine.cs`) —
+конструктор тепер додатково резолвить другий сервіс:
+
+--------------------------- КОД ---------------------------
+<pre>
+public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain loadingCurtain, AllServices services)
+{
+    _states = new Dictionary&lt;Type, IExitableState&gt;();
+    _states.Add(typeof(BootstrapState), new BootstrapState(this, services));
+    _states.Add(typeof(LoadLevelState), new LoadLevelState(this, sceneLoader, loadingCurtain));
+    IAssetProvider assetProvider = services.GetService&lt;IAssetProvider&gt;();
+    IInputService inputService = services.GetService&lt;IInputService&gt;();
+    _states.Add(typeof(GameLoopState), new GameLoopState(assetProvider, inputService));
+
+    Debug.Log($"[FSM] {GetType().Name} created {_states[typeof(BootstrapState)].GetType().Name} " +
+              $"{_states[typeof(LoadLevelState)].GetType().Name} " +
+              $"{_states[typeof(GameLoopState)].GetType().Name} states");
+}
+</pre>
+------------------------------------------------------------
+
+`sceneLoader`/`loadingCurtain`/`services` — уже знайомі з уроків 01-02. Перший рядок
+створює `BootstrapState`, передаючи ті самі `this`/`services`, що й в уроці 02, але
+тіло цього класу цього уроку змінилось.
+
+**→ Занурюємось у `BootstrapState`** (`Infrastructure/States/BootstrapState.cs`) —
+`RegisterServices()` тепер реєструє два сервіси:
+
+--------------------------- КОД ---------------------------
+<pre>
+private void RegisterServices()
+{
+    AssetProvider assetProvider = new AssetProvider();
+    InputService inputService = new InputService();
+    Debug.Log($"[FSM] {GetType().Name} initiated registration of a new service {assetProvider.GetType().Name}");
+    Debug.Log($"[FSM] {GetType().Name} initiated registration of a new service {inputService.GetType().Name}");
+    _services.RegisterService&lt;IAssetProvider&gt;(assetProvider);
+    _services.RegisterService&lt;IInputService&gt;(inputService);
+}
+</pre>
+------------------------------------------------------------
+
+`AssetProvider` — уже знайомий з уроку 02, повторно не занурюємось. `InputService` —
+новий клас цього уроку, створений тим самим прийомом: `new`, потім
+`RegisterService<TService>` — жодної правки в самому `AllServices` не знадобилось
+(доказ OCP: контейнер відкритий для нового типу сервісу, закритий для модифікації).
+
+**→ Занурюємось у `IInputService`/`InputService`**
+(`Infrastructure/Input/IInputService.cs` та `InputService.cs`) — другий сервіс,
+обгортка над новим Input System:
+
+--------------------------- КОД ---------------------------
+<pre>
+public interface IInputService : IService
+{
+    Vector2 GetDirection();
+
+    event Action OnJumpPressed;
+}
+
+public class InputService : IInputService
+{
+    private readonly InputActions _inputActions;
+
+    public event Action OnJumpPressed;
+
+    public InputService()
+    {
+        _inputActions = new InputActions();
+        _inputActions.Player.Enable();
+        _inputActions.Player.Jump.performed += ctx =&gt; OnJumpPressed?.Invoke();
+    }
+
+    public Vector2 GetDirection()
+    {
+        Vector2 direction = _inputActions.Player.Move.ReadValue&lt;Vector2&gt;();
+        return direction;
+    }
+}
+</pre>
+------------------------------------------------------------
+
+`IInputService : IService` — успадковує той самий маркер, що й `IAssetProvider`,
+тому реєструється в `AllServices` без додаткового каста. Контракт навмисно вузький
+(ISP): лише те, чим реально користується решта гри — опитування напрямку руху
+(`GetDirection()`, `Vector2`, бо `Move` — безперервне значення, перевіряється "на
+запит") і разова подія натискання (`OnJumpPressed`, `event Action`, бо натискання —
+дискретний момент, а не значення).
+
+Усередині `InputService` — приватне поле `_inputActions`, екземпляр згенерованого
+(`Generate C# Class`) класу з Input Actions asset'у (`Assets/Input/InputActions.inputactions`).
+Конструктор: створює екземпляр, викликає `.Player.Enable()` (без цього виклику новий
+Input System мовчки нічого не зчитує — ні `ReadValue`, ні події), і підписується на
+`_inputActions.Player.Jump.performed` лямбдою, яка одразу ретранслює подію у власну,
+простішу `OnJumpPressed` (без жодного Unity-типу в сигнатурі). Це і є та сама
+DIP-межа: `InputService` — єдине місце в проєкті, яке імпортує
+`UnityEngine.InputSystem` (перевірено скриптом `Docs/tools/verify_lesson.sh`); решта
+гри (зараз — `GameLoopState`, у майбутньому `PlayerController`) залежить лише від
+`IInputService`. `GetDirection()` — тонка обгортка над `_inputActions.Player.Move.ReadValue<Vector2>()`,
+той самий принцип делегування, що й `LoadAsset`/`Resources.Load` в уроці 02.
+
+**← Повертаємось до `BootstrapState.RegisterServices()`.** `inputService` створено й
+зареєстровано — конструктор `BootstrapState` завершено.
+
+**← Повертаємось до `GameStateMachine`.** `BootstrapState` доданий у `_states`. Другий
+рядок — `LoadLevelState`, не змінився з уроку 01, не занурюємось. Третій і четвертий
+рядки — нові: `services.GetService<IAssetProvider>()` (уже знайомий виклик з уроку 02)
+і поруч такий самий `services.GetService<IInputService>()` для щойно зареєстрованого
+`inputService`. Обидва передаються в `GameLoopState`.
+
+**→ Занурюємось у `GameLoopState`** (`Infrastructure/States/GameLoopState.cs`) —
+другий параметр конструктора й нова логіка в `Enter()`/`Exit()`:
+
+--------------------------- КОД ---------------------------
+<pre>
+public class GameLoopState : IState
+{
+    private readonly IAssetProvider _assetProvider;
+    private readonly IInputService _inputService;
+    private readonly string _assetPath = "TestObject";
+
+    public GameLoopState(IAssetProvider assetProvider, IInputService inputService)
+    {
+        _assetProvider = assetProvider;
+        _inputService = inputService;
+    }
+
+    public void Enter()
+    {
+        Debug.Log($"[FSM] Enter {GetType().Name}");
+        var obj = _assetProvider.LoadAsset(_assetPath);
+        _assetProvider.SpawnAsset(obj, Vector3.one, Quaternion.identity);
+        _inputService.OnJumpPressed += TestJump;
+    }
+
+    private void TestJump()
+    {
+        Debug.Log($"Jump Action!");
+    }
+
+    public void Exit()
+    {
+        _inputService.OnJumpPressed -= TestJump;
+    }
+}
+</pre>
+------------------------------------------------------------
+
+`_assetProvider`-частина `Enter()` не змінилась з уроку 02. Нове — `_inputService`,
+уже знайомий (той самий, щойно зареєстрований і діставаний вище): `Enter()`
+підписує приватний метод `TestJump` на `OnJumpPressed`, `Exit()` симетрично
+відписує тим самим методом (той самий принцип, що вже застосований для завіси в
+`LoadLevelState.Exit()` уроку 01, — підписка й відписка мають бути парними, інакше
+повторний вхід у стан подвоїв би виклики). `TestJump` — навмисно тимчасовий
+смок-тест уроку 03 (просто `Debug.Log`), не постійна ігрова логіка — та прийде разом
+із `PlayerController` в уроці 04, який і замінить цей метод на реальний стрибок.
+
+**← Повертаємось до `GameStateMachine`, тоді до `Game`, тоді до `GameBootstrapper.Awake()`.**
+Решта головної лінії не змінилась з уроків 01-02. Але тепер `GameLoopState.Enter()`
+завершується не лише спавном `TestObject`, а й живою підпискою на реальний ввід
+гравця — натискання Jump у Play Mode доходить через увесь ланцюжок (Unity Input
+System → `InputService` → `OnJumpPressed` → `GameLoopState.TestJump()`) до логу в
+Console, що й підтвердили логи на початку розділу.

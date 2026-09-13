@@ -5,7 +5,8 @@
 
 ## Що сталося в коді
 
-```csharp
+--------------------------- КОД ---------------------------
+<pre>
 public class BootstrapState : IState
 {
     private AllServices _services;          // поле класу
@@ -21,7 +22,8 @@ public class BootstrapState : IState
         AllServices _services = new AllServices();   // ← ось бага
     }
 }
-```
+</pre>
+------------------------------------------------------------
 
 Усередині `RegisterServices()` оголошена **нова локальна змінна**, яка випадково має
 **те саме ім'я**, що й поле класу — `_services`. З точки зору компілятора це абсолютно
