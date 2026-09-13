@@ -54,6 +54,17 @@ case "$lesson" in
     check "BootstrapState registers a service via AllServices" \
       "grep -q 'RegisterService' '$ROOT/Assets/CodeBase/Infrastructure/States/BootstrapState.cs'"
     ;;
+  03)
+    for f in IInputService.cs InputService.cs; do
+      check "$f exists somewhere in CodeBase" "has_file '$ROOT/Assets/CodeBase' '$f'"
+    done
+    check ".inputactions asset exists" "has_file '$ROOT/Assets' '*.inputactions'"
+    check "input system package"       "grep -q com.unity.inputsystem '$ROOT/Packages/manifest.json'"
+    check "no InputSystem usage outside InputService.cs" \
+      "! (grep -rl 'UnityEngine.InputSystem' '$ROOT/Assets/CodeBase' | grep -v 'InputService.cs' | grep -q .)"
+    check "InputService calls Enable()" \
+      "grep -rq '\\.Enable()' \"\$(find '$ROOT/Assets/CodeBase' -iname 'InputService.cs')\""
+    ;;
   *)
     echo "No checks defined for lesson '$lesson' yet."
     echo "Add a case block above when Docs/Lessons/${lesson}_*.md is written."
