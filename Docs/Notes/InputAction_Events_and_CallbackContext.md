@@ -419,6 +419,32 @@ public class WeaponInputTest : MonoBehaviour
   підписку. Іменований метод (`OnFirePerformed`) — те саме посилання і при `+=`, і
   при `-=`, тому відписка спрацює.
 
+## Підсумок: типи `UnityEngine.InputSystem`, які тут з'явились
+
+### `InputAction` (namespace `UnityEngine.InputSystem`, клас)
+
+- Конструктор: `new InputAction(string name = null, InputActionType type = ..., string binding = null, string interactions = null)` —
+  усі параметри опційні; `binding` — рядок шляху контролу (`"<Keyboard>/space"`),
+  `interactions` — рядок правила (`"hold(duration=1)"`).
+- Події (кожна — `event Action<InputAction.CallbackContext>`): `.started`,
+  `.performed`, `.canceled` — три окремі моменти взаємодії.
+- Методи: `.Enable()` / `.Disable()` → `void` — увімкнути/вимкнути читання вводу;
+  `.AddBinding(string path)` → додає ще один фізичний контрол до тієї самої дії.
+
+### `InputAction.CallbackContext` (вкладений `struct` усередині `InputAction`)
+
+- `.ReadValue<T>()` → `T` — значення, що викликало спрацювання; `T` має збігатись
+  із реальним типом даних дії (одноосьовий контрол → `float`, стік/composite →
+  `Vector2`), інакше — `InvalidOperationException` у рантаймі.
+- `.control` → `InputControl` — яка конкретно фізична кнопка/вісь спрацювала;
+  `.control.displayName` → `string`.
+- `.time` → `double` — момент часу спрацювання.
+
+### `InputActionType` (namespace `UnityEngine.InputSystem`, enum)
+
+- `Button` — дискретна подія (натиснуто/ні).
+- `Value` — безперервне значення (`float`, `Vector2`, `Vector3`...).
+
 ## Пов'язане
 
 - [`Input_System.md`](Input_System.md) — Action Map/Action/Binding/Composite,

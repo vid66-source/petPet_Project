@@ -53,6 +53,16 @@ GameObject'ом у сцені, як `Curtain`), має бути **дитиною
 викликається `DontDestroyOnLoad`, — а не окремим сусіднім об'єктом, хай навіть на вигляд
 пов'язаним.
 
+## Підсумок: бібліотечні типи тут
+
+### `MonoBehaviour.DontDestroyOnLoad(Object target)` (namespace `UnityEngine`)
+
+- Аргумент: `target` типу `UnityEngine.Object` (тут — `this`, сам компонент
+  `GameBootstrapper`; Unity під капотом захищає **весь GameObject**, на якому цей
+  компонент висить, і всю його дочірню ієрархію).
+- Повертає: `void`. Ефект — побічний: помічає GameObject незнищуваним при
+  `SceneManager.LoadSceneAsync`.
+
 ## Пов'язане
 
 - [`Coroutines_and_Scene_Loading.md`](Coroutines_and_Scene_Loading.md) — сам процес

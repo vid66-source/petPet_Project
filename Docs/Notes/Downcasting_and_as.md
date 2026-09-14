@@ -68,6 +68,18 @@ public void Enter&lt;TState&gt;() where TState : class, IState
 `where TState : class` у сигнатурі: без неї компілятор не дозволив би `as TState`,
 бо `TState` міг би виявитись структурою (`struct`), для якої `as` не існує.
 
+## Підсумок: бібліотечні типи тут
+
+`as` — оператор мови C#, не тип бібліотеки. Єдиний реальний бібліотечний тип, що
+тут задіяний:
+
+### `Dictionary<TKey, TValue>` (namespace `System.Collections.Generic`)
+
+Той самий контейнер, що й у [`Generics.md`](Generics.md) —
+`Dictionary<Type, IExitableState>`. Індексатор `_states[typeof(TState)]` повертає
+`IExitableState` (`TValue`) — це і є той "загальніший тип", від якого `as TState`
+робить downcast до конкретнішого.
+
 ## Пов'язане
 
 - [`Generics.md`](Generics.md) — сам метод, у якому цей downcast стається.

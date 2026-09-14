@@ -54,6 +54,29 @@ return Object.Instantiate(prefab, at, Quaternion.identity);
 Два виклики поспіль — перший дістає посилання на асет, другий створює з нього живий
 екземпляр у сцені.
 
+## Підсумок: типи `UnityEngine`, які тут з'явились
+
+### `Resources` (namespace `UnityEngine`, статичний клас)
+
+- `Load<T>(string path)` → `T` — `T` — будь-який тип асету (`GameObject`,
+  `AudioClip`, `Sprite`...), `path` — шлях відносно папки `Resources/`, без
+  розширення файлу.
+
+### `Object` (namespace `UnityEngine`, базовий клас Unity-об'єктів; не плутати з `System.Object`)
+
+- `Instantiate(Object original)` → `Object` — клонує асет із його власним
+  положенням/поворотом.
+- `Instantiate(Object original, Vector3 position, Quaternion rotation)` → `Object` —
+  клонує з явно заданою позицією (`Vector3` — три `float`: x/y/z) і поворотом.
+- Обидва перевантаження повертають статичний тип `Object`, але Unity сам підбирає
+  конкретний варіант і по факту повертає той самий тип, що передали (`GameObject`
+  → `GameObject`), без ручного касту.
+
+### `Quaternion` (namespace `UnityEngine`, struct)
+
+- `Quaternion.identity` → `Quaternion` — статична властивість, значення "без
+  повороту".
+
 ## Пов'язане
 
 - [`Coroutines_and_Scene_Loading.md`](Coroutines_and_Scene_Loading.md) — інший приклад

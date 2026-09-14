@@ -59,6 +59,19 @@ CodeBase.Infrastructure.GameBootstrapper:Awake () (at .../GameBootstrapper.cs:16
 Це фактично "хто кого викликав" знизу вгору — корисно при діагностиці, звідки насправді
 прийшов виклик, особливо коли той самий метод (`Enter`) визначений у кількох класах.
 
+## Підсумок: типи тут
+
+### `Debug` (namespace `UnityEngine`, статичний клас)
+
+- `Log(object message)` → `void` — друкує в Console редактора; приймає `object`,
+  тому підходить будь-що з перевизначеним чи стандартним `ToString()`.
+
+### `object.GetType()` (метод на `System.Object`, тобто буквально на всьому)
+
+- Повертає `System.Type` — реальний тип об'єкта в рантаймі. Детальний розбір усіх
+  властивостей/методів `Type` — [`Reflection_Basics.md`](Reflection_Basics.md).
+- `.Name` (властивість `Type`) → `string` — коротке ім'я класу.
+
 ## Пов'язане
 
 - [`Generics.md`](Generics.md) — `GameStateMachine.Enter<TState>()`, чий стек-трейс тут

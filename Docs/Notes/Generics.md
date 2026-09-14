@@ -178,6 +178,33 @@ public class Quad&lt;T1, T2, T3, T4&gt;
 рідко реально використовуваним випадком (див.
 [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) §2).
 
+## Підсумок: бібліотечні типи, що тут з'явились
+
+Сам файл — про мовну фічу C# (generics), не про конкретну бібліотеку, але кілька
+реальних `.NET`-типів засвічені принагідно:
+
+### `Dictionary<TKey, TValue>` (namespace `System.Collections.Generic`)
+
+generic-колекція "ключ → значення". У проєкті — `Dictionary<Type, IExitableState>`:
+- `TKey` = `Type` (ключ — сам тип стану, через `typeof(BootstrapState)` тощо).
+- `TValue` = `IExitableState` (значення — спільний інтерфейс усіх станів).
+- Індексатор `dictionary[key]` → `TValue` — саме так стан дістається в
+  `GameStateMachine.Enter<TState>()` (`_states[typeof(TState)]`).
+
+### `IComparable<T>` (namespace `System`)
+
+Інтерфейс-контракт "уміє порівнювати себе з іншим об'єктом того самого типу".
+- Метод: `int CompareTo(T other)` — аргумент `other` того самого типу `T`, повертає
+  `int` (`< 0` — менше, `0` — рівне, `> 0` — більше). Саме цей метод дозволяє
+  `Max<T>(T a, T b) where T : IComparable<T>` викликати `a.CompareTo(b)`.
+
+### `Func<TA, TB, TResult>` (namespace `System`)
+
+generic-делегат із двох аргументів. У прикладі `Combine<TA, TB, TResult>` —
+`combiner` типу `Func<TA, TB, TResult>` приймає `TA a` й `TB b`, повертає `TResult`.
+Детальніше про всю родину `Action`/`Func` —
+[`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md).
+
 ## Пов'язане
 
 - [`Interfaces.md`](Interfaces.md) — навіщо взагалі інтерфейси, база перед

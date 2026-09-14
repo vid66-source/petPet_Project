@@ -316,6 +316,54 @@ public class Scoreboard
   сервіси — звичайні C#-класи без Inspector, тому `UnityEvent` поки не застосовується;
   знадобиться, коли з'явиться перший UI-екран (наприклад, меню паузи).
 
+## Підсумок: делегатні типи бібліотеки, які тут з'явились
+
+### `Action` / `Action<T1, ..., T16>` (namespace `System`)
+
+Готовий generic-делегат: "посилання на метод, що повертає `void`". Кількість
+типових параметрів = кількість аргументів методу, на який посилається.
+- `Action` — 0 аргументів. У проєкті: `Action onLoaded` (`SceneLoader.Load`).
+- `Action<T>` — 1 аргумент типу `T`. У проєкті: `Action<InputAction.CallbackContext>`
+  (подія `.performed`/`.started`/`.canceled`).
+- Кожен екземпляр `Action`/`Action<T>` має вбудовані `Invoke()` /
+  `BeginInvoke()`/`EndInvoke()` — генеруються компілятором автоматично, писати їх
+  самому не треба.
+
+### `Func<TResult>` / `Func<T1, ..., T16, TResult>` (namespace `System`)
+
+Той самий принцип, що `Action`, але метод **повертає** значення типу `TResult`
+(останній типовий параметр — завжди результат). У проєкті поки не застосований
+(лише в ізольованому прикладі `Combine` з [`Generics.md`](Generics.md)).
+
+### Власний `delegate` (ключове слово мови, не тип з бібліотеки)
+
+`public delegate void ScoredHandler(int points);` — оголошує **новий** тип
+делегата з іменем `ScoredHandler` замість generic-запису `Action<int>`. У проєкті
+не використано.
+
+### `event` (мовна конструкція, не тип)
+
+`event Action Ringing;` — поле-делегат із обмеженим доступом ззовні (лише
+`+=`/`-=`, не пряме присвоєння чи `Invoke()`). Не окремий тип бібліотеки, а
+модифікатор на полі типу-делегата.
+
+### `EventHandler` / `EventHandler<TEventArgs>` (namespace `System`)
+
+Готовий delegate-тип старої (WinForms-часів) конвенції:
+`void Handler(object sender, TEventArgs e)` — рівно два аргументи: `sender`
+(`object`, хто викликав) і `e` (дані, похідні від `EventArgs`). У проєкті не
+використовується.
+
+### `UnityEvent` / `UnityEvent<T>` (namespace `UnityEngine.Events`)
+
+Unity-специфічний клас (не мовна `event`), серіалізований, налаштовуваний в
+Inspector'і.
+- Методи: `.AddListener(UnityAction)` / `.RemoveListener(UnityAction)` — де
+  `UnityAction` — Unity-власний делегат-еквівалент `Action`.
+- `Button.onClick` (namespace `UnityEngine.UI`, на компоненті `Button`) —
+  властивість типу `Button.ButtonClickedEvent` (нащадок `UnityEvent`, 0
+  аргументів). Приклад з файлу: `_resumeButton.onClick.AddListener(OnResumeClicked)`.
+
 ## Пов'язане
 
 - [`Generics.md`](Generics.md) — інший спосіб параметризувати поведінку (через тип, а

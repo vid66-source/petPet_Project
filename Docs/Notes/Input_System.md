@@ -129,6 +129,26 @@ Unity `EventSystem`, який працює незалежно від стану 
   interaction) і того, коли підписку на `InputAction`-подію треба відписувати, а
   коли ні — див. [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md).
 
+## Підсумок: типи `UnityEngine.InputSystem`, які тут з'явились
+
+Поглиблений розбір самих типів (`InputAction`, `CallbackContext`,
+`InputActionType`) — у
+[`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md);
+тут лише те, що додає рівень Unity-редактора/згенерованого класу:
+
+### Згенерований клас (`Generate C# Class`, ім'я умовне, тут — `<ЗгенерованийКлас>`)
+
+- Конструктор без параметрів: `new <ЗгенерованийКлас>()`.
+- Властивість на кожен Action Map (тут — `.Player`) → обгортка над Action Map з
+  властивістю на кожну дію (`.Move`, `.Jump`) → `InputAction`.
+
+### Дія (`InputAction`, той самий тип, що в `InputAction_Events_and_CallbackContext.md`)
+
+- `.Enable()` / `.Disable()` → `void`.
+- `.ReadValue<T>()` → `T` (poll) — приклад:
+  `Vector2 move = player.Move.ReadValue<Vector2>();` (`Vector2` — два `float`, x/y).
+- `.performed` (event) — приклад: `player.Jump.performed += context => { ... };`.
+
 ## Пов'язане
 
 - [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) —

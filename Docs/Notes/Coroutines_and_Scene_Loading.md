@@ -59,6 +59,36 @@ private IEnumerator LoadScene(string sceneName, Action onLoaded)
 передається колбек `onLoaded`, викликаний саме тут, у кінці корутини) і
 `Docs/PATTERNS.md` (DIP).
 
+## Підсумок: бібліотечні типи тут
+
+### `SceneManager` (namespace `UnityEngine.SceneManagement`, статичний клас)
+
+- `LoadSceneAsync(string sceneName)` → `AsyncOperation` — асинхронне завантаження
+  сцени за іменем.
+- `LoadScene(string sceneName)` → `void` — синхронний, блокуючий варіант (для
+  контрасту, у проєкті не використаний).
+- `GetActiveScene()` → `Scene` — поточна активна сцена.
+
+### `Scene` (namespace `UnityEngine.SceneManagement`, struct)
+
+- `.name` → `string` — ім'я сцени (те саме, що назва файлу `.unity`).
+
+### `AsyncOperation` (namespace `UnityEngine`)
+
+- `.isDone` → `bool` — чи операція вже завершилась. Той самий тип повертають й
+  інші асинхронні Unity-операції (Addressables, `UnityWebRequest`), не лише сцени.
+
+### `IEnumerator` (namespace `System.Collections`)
+
+Стандартний .NET-інтерфейс ітератора, який Unity використовує спеціально для
+корутин через `MonoBehaviour.StartCoroutine(IEnumerator routine)`. `yield return null`
+— команда "призупинись до наступного кадру", не звичайне значення `null`.
+
+### `Action` (namespace `System`)
+
+`onLoaded` — колбек без аргументів, викликаний після завершення завантаження;
+детальніше в [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md).
+
 ## Пов'язане
 
 - [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) —
