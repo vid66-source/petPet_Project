@@ -45,6 +45,10 @@
 - [`Input_System.md`](Input_System.md) — новий Input System: Action Map/Action/Binding/
   Composite, `Button` vs `Value`, `Generate C# Class`, `.Enable()`, poll (`ReadValue<T>()`)
   vs event (`.performed`/`CallbackContext`), на прикладі `Input Actions` asset'у уроку 03.
+- [`Reflection_Basics.md`](Reflection_Basics.md) — `Type`/`GetConstructors`/
+  `GetParameters`/`Invoke`/`MakeGenericMethod` покроково, **з реальним, запущеним
+  виводом консолі** на кожному кроці (не абстрактний опис) — для опційного ДЗ
+  "constructor-only auto-resolver" уроку 03.
 - [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) —
   поглиблено: `InputAction` без обгортки, `.started`/`.performed`/`.canceled` на різних
   реальних прикладах (проста кнопка, аналогове значення, кілька біндингів, `Hold`
