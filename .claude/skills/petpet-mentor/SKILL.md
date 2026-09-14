@@ -100,7 +100,28 @@ result — never to write the feature for them.
   `git show <hash>:Docs/SESSION_NOTES.md` for each prior commit) — each past session's
   notes usually summarize what C# mechanic the student got stuck on and what isolated
   example was used to explain it.
-- Reference project (external, read-only, do not edit):
+- **Portable curated mirror (check this first — available on any machine, clone if
+  missing):** `https://github.com/vid66-source/ref_for_claude` — a small (~3 MB, no
+  Git LFS), git-clonable subset of the full course reference below, containing only
+  what mentoring actually needs: `ARCHITECTURE_REFERENCE.md`, `CodeBaseByLesson/NN/`
+  (same content as the `_CodeBaseByLesson` path below), `Plugins/SimpleInput/` and
+  `Plugins/JMOAssets/` (the two third-party plugins the course actually used, code
+  only — see below), and `PackagesManifestByLesson/NN/manifest.json` (which official
+  Unity packages were present at each lesson). Deliberately excludes videos, the
+  per-lesson `.zip` archives, and decorative art asset packs (`Free RPG Icons`,
+  `GUI CARTOON`, `Simple Fantasy GUI` — no code, not architecturally relevant). See
+  that repo's own `README.md` for the full "included / excluded and why" list. Use
+  this instead of the `E:\syndicate\...` paths below whenever it's sufficient —
+  it's the only one of these sources guaranteed present after moving to a new
+  machine (`git clone` it there). Fall back to the full local course tree only when
+  something outside this curated subset is genuinely needed (e.g. a different
+  plugin's code, or something from a lesson's full asset tree) — in that case the
+  student can extract it from the relevant `NN/*.zip` under
+  `E:\syndicate\Architecture\k-syndicate.school\` (same recipe as the CodeBase
+  extraction below), and it can be added to the curated mirror afterward if it's
+  broadly useful.
+- Reference project (external, read-only, do not edit; local-only — may not exist on
+  every machine, see portable mirror above):
   `E:\syndicate\Architecture\k-syndicate.school\16\knowledge-is-power-master\knowledge-is-power-master\ARCHITECTURE_REFERENCE.md`
   — the original pattern catalogue this course adapts. Consult it when a lesson needs to
   reference how the pattern looked in the source project.
@@ -113,7 +134,9 @@ result — never to write the feature for them.
   enemies, optional DI-lifecycle/auto-resolver homework, CI as an optional final stretch).
   Re-read it only if planning a lesson these notes haven't already informed.
 - Original course code, per lesson (external, read-only, private, **never copy into this
-  repo or into a lesson README**): `E:\syndicate\Architecture\k-syndicate.school\_CodeBaseByLesson\NN\CodeBase\`
+  repo or into a lesson README**; local-only — same content is in the portable
+  mirror's `CodeBaseByLesson/NN/`, prefer that if this path isn't present):
+  `E:\syndicate\Architecture\k-syndicate.school\_CodeBaseByLesson\NN\CodeBase\`
   — pre-extracted `Assets/CodeBase` C# sources only (no prefabs/scenes/binaries, no
   `.meta`) for lesson NN in `{01,02,03,04,05,06,08,09,10,11,12,13,14,15,16}` (07 and 17 have
   no separate snapshot — their changes are folded into the next available one). Each folder
