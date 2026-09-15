@@ -45,10 +45,13 @@
 - [`Input_System.md`](Input_System.md) — новий Input System: Action Map/Action/Binding/
   Composite, `Button` vs `Value`, `Generate C# Class`, `.Enable()`, poll (`ReadValue<T>()`)
   vs event (`.performed`/`CallbackContext`), на прикладі `Input Actions` asset'у уроку 03.
-- [`Reflection_Basics.md`](Reflection_Basics.md) — `Type`/`GetConstructors`/
-  `GetParameters`/`Invoke`/`MakeGenericMethod` покроково, **з реальним, запущеним
-  виводом консолі** на кожному кроці (не абстрактний опис) — для опційного ДЗ
-  "constructor-only auto-resolver" уроку 03.
+- [`Reflection_Basics.md`](Reflection_Basics.md) — довідник за задачами (не
+  інструкція до конкретного ДЗ): для кожної задачі — "дізнатись конструктори
+  типу", "створити об'єкт через конструктор", "викликати метод на готовому
+  об'єкті", "закрити generic-метод/тип конкретним типом", "перевірити
+  `where`-обмеження" — окремий розділ із мінімальним ізольованим прикладом і
+  **реальним, запущеним виводом консолі**. Виникло з опційного ДЗ уроку 03
+  "constructor-only auto-resolver", але саме рішення ДЗ у файлі не описане.
 - [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) —
   поглиблено: `InputAction` без обгортки, `.started`/`.performed`/`.canceled` на різних
   реальних прикладах (проста кнопка, аналогове значення, кілька біндингів, `Hold`

@@ -123,6 +123,61 @@ public class Pair&lt;TFirst, TSecond&gt;
   успадкування: `T` має бути цим класом або його нащадком, і тоді на `T` доступні методи
   саме цього класу.
 
+## Обмеження одного типового параметра іншим (`where T2 : T1`)
+
+Окремий випадок `where`, не показаний вище: обмеженням може бути не лише
+конкретний клас/інтерфейс чи `class`/`struct`, а **інший типовий параметр того
+самого методу**. Задача, де це трапляється: реєстратор сервісів, який приймає і
+"під яким інтерфейсом шукати" (`TIService`), і "який клас реально створювати"
+(`TService`) — і ці два типи повинні бути узгоджені між собою, інакше готовий
+об'єкт не вдасться привести до заявленого інтерфейсу.
+
+--------------------------- КОД ---------------------------
+<pre>
+public interface IService { }
+public interface IAssetProvider : IService { }
+public interface IInputService : IService { }
+public class AssetProvider : IAssetProvider { }
+public class InputService : IInputService { }
+
+static void RegisterService&lt;TIService, TService&gt;()
+    where TIService : class, IService
+    where TService : class, TIService // &lt;-- обмеження іншим типовим параметром
+{
+    Console.WriteLine($"registering {typeof(TIService).Name} &lt;- {typeof(TService).Name}");
+}
+
+RegisterService&lt;IAssetProvider, AssetProvider&gt;(); // ОК, AssetProvider реалізує IAssetProvider
+RegisterService&lt;IInputService, AssetProvider&gt;();  // навмисно неправильна пара
+</pre>
+------------------------------------------------------------
+
+--------------------------- ВИВІД ---------------------------
+<pre>
+registering IAssetProvider &lt;- AssetProvider
+error CS0311: The type 'AssetProvider' cannot be used as type parameter 'TService' in the generic type or method '...RegisterService&lt;TIService, TService&gt;()'.
+There is no implicit reference conversion from 'AssetProvider' to 'IInputService'.
+</pre>
+------------------------------------------------------------
+
+`where TService : class, TIService` — на місці, де зазвичай стоїть конкретний
+інтерфейс (як `where TState : IState` вище), підставлено інший типовий параметр
+цього ж методу. Компілятор читає це як "яким би типом не підставили `TService`,
+він має бути reference-конвертований саме в той тип, який підставили в
+`TIService` цього ж виклику" — і перевіряє це **на кожному виклику окремо, під
+час компіляції**. Неправильна пара (`RegisterService<IInputService,
+AssetProvider>()`, де `AssetProvider` не реалізує `IInputService`) не
+компілюється взагалі — не падає з `InvalidCastException` десь у рантаймі після
+`(TIService)`-каста всередині методу.
+
+Реальне застосування — `AllServices.RegisterService<TIService, TService>()` у
+проєкті: `TService` там обмежений просто `where TService : class, IService`
+(жодного зв'язку з `TIService`), тому виклик на кшталт
+`RegisterService<IInputService, AssetProvider>()` зараз компілюється й падає
+лише в рантаймі, всередині `ServicesResolver.ResolveServiceWithTypes`, на
+рядку `(TIService)serviceInstant`. Заміна на `where TService : class,
+TIService` перенесла б цю перевірку на етап компіляції.
+
 ## Скільки типових параметрів можна/варто мати
 
 Технічно — дуже багато (CLR дозволяє тисячі на метод/клас, обмеження рівня
