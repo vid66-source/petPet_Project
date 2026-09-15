@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Experimental;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure.Services
@@ -15,15 +16,16 @@ namespace CodeBase.Infrastructure.Services
             _services = new Dictionary<Type, IService>();
         }
 
-        public void RegisterService<TService>(TService service) where TService : class, IService
+        public void RegisterService<TIService, TService>() where TIService : class, IService where TService : class,  TIService
         {
-            _services.Add(typeof(TService), service);
-            Debug.Log($"[Services] Registered service of type {typeof(TService).Name}");
+            TIService serviceInstance = ServicesResolver.ResolveServiceWithTypes<TIService, TService>();
+            _services.Add(typeof(TIService), serviceInstance);
+            Debug.Log($"[Services] Registered service of type {typeof(TIService).Name}");
         }
 
         public TService GetService<TService>() where TService : class, IService
         {
-            var service = _services[typeof(TService)] as TService;
+            TService service = _services[typeof(TService)] as TService;
             return service;
         }
     }
