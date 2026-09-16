@@ -28,8 +28,7 @@ Input System — окремий package (`com.unity.inputsystem`), не част
 
 ### Ієрархія понять усередині asset'у
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 InputActionAsset ("Input Actions")
 └── Action Map ("Player")           — іменована група дій одного "режиму"
     ├── Action ("Move")             — дія, незалежна від конкретної клавіші
@@ -43,8 +42,7 @@ InputActionAsset ("Input Actions")
     │   └── Binding → Space [Keyboard]
     └── Action ("Fire")
         └── Binding → Left Button [Mouse]
-</pre>
-------------------------------------------------------------
+```
 
 - **Action Map** — групування дій за "режимом гравця" (наприклад, `Player` під час гри,
   окремий `UI` під час меню — у проєкті поки лише `Player`).
@@ -77,18 +75,16 @@ InputActionAsset ("Input Actions")
 Загальна форма використання (назви умовні — залежать від того, як генератор назве
 Action Map/дії з твого asset'у):
 
---------------------------- КОД ---------------------------
-<pre>
-var actions = new &lt;ЗгенерованийКлас&gt;();   // конструктор без параметрів
+```csharp
+var actions = new <ЗгенерованийКлас>();   // конструктор без параметрів
 var player = actions.Player;              // властивість на Action Map "Player"
 
 player.Enable();                          // без цього нічого не читається!
 
-Vector2 move = player.Move.ReadValue&lt;Vector2&gt;();   // опитування (poll)
+Vector2 move = player.Move.ReadValue<Vector2>();   // опитування (poll)
 
-player.Jump.performed += context =&gt; { /* ... */ }; // підписка (event)
-</pre>
-------------------------------------------------------------
+player.Jump.performed += context => { /* ... */ }; // підписка (event)
+```
 
 ## `.Enable()` / `.Disable()` — найпоширеніша перша пастка
 

@@ -34,11 +34,9 @@
 
 Є ще третій варіант — **власний named delegate** через ключове слово `delegate`:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public delegate void ScoredHandler(int points);
-</pre>
-------------------------------------------------------------
+```
 
 Робить те саме, що `Action<int>`, але з власною, читабельнішою назвою типу замість
 generic-запису. У проєкті поки не знадобився — `Action`/`Action<T>` покривають усе, що
@@ -48,8 +46,7 @@ generic-запису. У проєкті поки не знадобився — `
 
 **Приклад із проєкту** — `LoadLevelState.cs` / `SceneLoader.cs` (урок 01):
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 // LoadLevelState.cs
 public void Enter(string sceneName)
 {
@@ -57,12 +54,10 @@ public void Enter(string sceneName)
     _sceneLoader.Load(sceneName, onLoaded);
 }
 
-private void onLoaded() =&gt; _stateMachine.Enter&lt;GameLoopState&gt;();
-</pre>
-------------------------------------------------------------
+private void onLoaded() => _stateMachine.Enter<GameLoopState>();
+```
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 // SceneLoader.cs
 public void Load(string sceneName, Action onLoaded = null)
 {
@@ -71,8 +66,7 @@ public void Load(string sceneName, Action onLoaded = null)
     else
         _coroutineRunner.StartCoroutine(LoadScene(sceneName, onLoaded));
 }
-</pre>
-------------------------------------------------------------
+```
 
 `_sceneLoader.Load(sceneName, onLoaded)` передає `onLoaded` **без дужок** — не
 викликає, а передає посилання на метод. Компілятор сам загортає пару "цей метод + цей
@@ -103,14 +97,12 @@ delegate), який зберігає клас-власник. `+=` не викл
 у цей список. `-=` — **видаляє** з нього. Коли власник робить `Ringing?.Invoke()`, він
 проходить по всьому поточному списку й викликає кожен метод, що там є:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 _alarmClock.Ringing += OnAlarm;    // список: [OnAlarm]
 _alarmClock.Ringing += OnSnooze;   // список: [OnAlarm, OnSnooze]
 _alarmClock.TriggerAlarm();        // викличе ОБИДВА
 _alarmClock.Ringing -= OnAlarm;    // список: [OnSnooze]
-</pre>
-------------------------------------------------------------
+```
 
 Ніякої магії — це такий самий список, як `List<Action>`, тільки з вбудованою мовною
 підтримкою `+=`/`-=`/`Invoke()` замість `.Add()`/`.Remove()`/`foreach`.
@@ -126,8 +118,7 @@ _alarmClock.Ringing -= OnAlarm;    // список: [OnSnooze]
 
 **Наскрізний приклад (ізольований):**
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface IAlarmClock
 {
     event Action Ringing;
@@ -137,7 +128,7 @@ public class AlarmClock : IAlarmClock
 {
     public event Action Ringing;
 
-    public void TriggerAlarm() =&gt; Ringing?.Invoke();
+    public void TriggerAlarm() => Ringing?.Invoke();
 }
 
 // десь у споживачі:
@@ -145,8 +136,7 @@ _alarmClock.Ringing += OnAlarm;   // підписка
 _alarmClock.Ringing -= OnAlarm;   // відписка
 
 void OnAlarm() { /* ... */ }
-</pre>
-------------------------------------------------------------
+```
 
 ### Чому подія оголошується в класі, що її викликає, а не в тому, хто підписується
 
@@ -166,14 +156,12 @@ void OnAlarm() { /* ... */ }
 Без слова `event` — `public Action Ringing;` — це теж скомпілюється і `+=`/`-=` теж
 працюватимуть. Але звичайне поле **не захищене**: чужий клас може випадково:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 _alarmClock.Ringing = SomeHandler;   // ПЕРЕЗАПИСУЄ весь список — усі попередні
                                        // підписники мовчки зникають
 _alarmClock.Ringing.Invoke();         // чужий клас сам "вдає" AlarmClock і
                                        // ініціює подію, хоча нічого не сталось
-</pre>
-------------------------------------------------------------
+```
 
 `event` забороняє обидві дії **на рівні компілятора** — ззовні класу-власника
 дозволені лише `+=`/`-=`. Це та сама ідея інкапсуляції, що й `private`-поле з
@@ -182,29 +170,25 @@ _alarmClock.Ringing.Invoke();         // чужий клас сам "вдає" A
 ### Чому це послаблює залежність (не лише про захист від помилок)
 
 **Без event (жорстка залежність):**
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class AlarmClock
 {
     private Player _player;               // AlarmClock ЗМУШЕНИЙ знати клас Player
 
-    public void TriggerAlarm() =&gt; _player.WakeUp();
+    public void TriggerAlarm() => _player.WakeUp();
 }
-</pre>
-------------------------------------------------------------
+```
 Якщо завтра з'явиться ще й `Robot`, якому теж треба реагувати — доведеться лізти
 всередину `AlarmClock` і дописувати виклик. Порушення OCP.
 
 **З event (слабка залежність):**
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class AlarmClock
 {
     public event Action Ringing;          // знає лише про System.Action
-    public void TriggerAlarm() =&gt; Ringing?.Invoke();
+    public void TriggerAlarm() => Ringing?.Invoke();
 }
-</pre>
-------------------------------------------------------------
+```
 `Player`, `Robot`, чи хто завгодно ще підписується сам, без жодної правки
 `AlarmClock`. `AlarmClock` навіть не знає, чи є взагалі хтось підписаний — звідси
 `?.` перед `Invoke`: якщо список порожній (`null`), виклику просто не станеться.
@@ -217,14 +201,13 @@ public class AlarmClock
 
 **Ізольований приклад:**
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class Referee
 {
     // подія з параметром: підписник отримає int (скільки очок забито)
-    public event Action&lt;int&gt; Scored;
+    public event Action<int> Scored;
 
-    public void Score(int points) =&gt; Scored?.Invoke(points);
+    public void Score(int points) => Scored?.Invoke(points);
 }
 
 public class Scoreboard
@@ -237,12 +220,11 @@ public class Scoreboard
         _referee.Scored += OnScored;   // підписка — у конструкторі
     }
 
-    // сигнатура ОБОВ'ЯЗКОВО має відповідати Action&lt;int&gt;:
+    // сигнатура ОБОВ'ЯЗКОВО має відповідати Action<int>:
     // один параметр int, повертає void
-    private void OnScored(int points) =&gt; Console.WriteLine($"+{points} очок!");
+    private void OnScored(int points) => Console.WriteLine($"+{points} очок!");
 }
-</pre>
-------------------------------------------------------------
+```
 
 Ключове: коли підписуєшся методом (`+= OnScored`, без дужок), компілятор перевіряє,
 що **сигнатура методу** (типи параметрів, тип результату) збігається з типом
@@ -289,8 +271,7 @@ public class Scoreboard
   через `.AddListener(method)`/`.RemoveListener(method)` замість `+=`/`-=`, та сама
   ідея "список методів":
 
-  --------------------------- КОД ---------------------------
-  <pre>
+```csharp
   using UnityEngine;
   using UnityEngine.UI;
 
@@ -298,14 +279,13 @@ public class Scoreboard
   {
       [SerializeField] private Button _resumeButton;
 
-      private void Awake() =&gt; _resumeButton.onClick.AddListener(OnResumeClicked);
+      private void Awake() => _resumeButton.onClick.AddListener(OnResumeClicked);
 
-      private void OnResumeClicked() =&gt; Debug.Log("Resume clicked!");
+      private void OnResumeClicked() => Debug.Log("Resume clicked!");
 
-      private void OnDestroy() =&gt; _resumeButton.onClick.RemoveListener(OnResumeClicked);
+      private void OnDestroy() => _resumeButton.onClick.RemoveListener(OnResumeClicked);
   }
-  </pre>
-  ------------------------------------------------------------
+```
 
   Той самий принцип "рушій сам нічого не зберігає, лише виявляє й диспетчерить", що
   й у Input System (§6 вище, і детальніше в

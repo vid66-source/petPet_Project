@@ -7,11 +7,9 @@
 
 ### Крок 1 — `Resources.Load<T>(path)`: дістати сам асет ("креслення")
 
---------------------------- КОД ---------------------------
-<pre>
-GameObject prefab = Resources.Load&lt;GameObject&gt;("DebugSpawnTest");
-</pre>
-------------------------------------------------------------
+```csharp
+GameObject prefab = Resources.Load<GameObject>("DebugSpawnTest");
+```
 
 - Unity шукає файл усередині будь-якої папки, яка **буквально називається `Resources`**,
   де завгодно під `Assets/` — спеціальна, "магічна" для Unity назва папки: усе, що в ній
@@ -26,12 +24,10 @@ GameObject prefab = Resources.Load&lt;GameObject&gt;("DebugSpawnTest");
 
 ### Крок 2 — `Object.Instantiate(...)`: створити живий об'єкт у сцені з цього креслення
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 GameObject instance = Object.Instantiate(prefab);
 GameObject instance = Object.Instantiate(prefab, at, Quaternion.identity);
-</pre>
-------------------------------------------------------------
+```
 
 - Перша форма — клонує префаб із тим положенням/поворотом, які збережені в самому
   префабі (найчастіше `(0,0,0)`, без повороту).
@@ -44,12 +40,10 @@ GameObject instance = Object.Instantiate(prefab, at, Quaternion.identity);
 
 ## Разом
 
---------------------------- КОД ---------------------------
-<pre>
-GameObject prefab = Resources.Load&lt;GameObject&gt;(path);
+```csharp
+GameObject prefab = Resources.Load<GameObject>(path);
 return Object.Instantiate(prefab, at, Quaternion.identity);
-</pre>
-------------------------------------------------------------
+```
 
 Два виклики поспіль — перший дістає посилання на асет, другий створює з нього живий
 екземпляр у сцені.

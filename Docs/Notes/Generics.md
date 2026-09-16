@@ -17,33 +17,29 @@ Generic — клас або метод, який параметризовани�
 
 ## Мінімальний ізольований приклад
 
---------------------------- КОД ---------------------------
-<pre>
-public class Box&lt;T&gt;
+```csharp
+public class Box<T>
 {
     private T _value;
-    public void Put(T value) =&gt; _value = value;
-    public T Take() =&gt; _value;
+    public void Put(T value) => _value = value;
+    public T Take() => _value;
 }
-</pre>
-------------------------------------------------------------
+```
 `Box<int>` зберігає `int`, `Box<string>` — `string`, той самий код класу обслуговує обидва
 випадки. Компілятор на етапі компіляції знає точний тип `T` для кожного використання —
 жодних кастів не треба.
 
 ## Реальний приклад із проєкту — `GameStateMachine.Enter<TState>()`
 
---------------------------- КОД ---------------------------
-<pre>
-public void Enter&lt;TState&gt;() where TState : class, IState
+```csharp
+public void Enter<TState>() where TState : class, IState
 {
     _currentState?.Exit();
     TState newState = _states[typeof(TState)] as TState;
     _currentState = newState;
     newState?.Enter();
 }
-</pre>
-------------------------------------------------------------
+```
 
 Виклик: `stateMachine.Enter<BootstrapState>()`. `TState` — тут `BootstrapState`, підставлено
 явно в кутових дужках при виклику (compile-time, без рефлексії "на льоту").
@@ -64,15 +60,13 @@ public void Enter&lt;TState&gt;() where TState : class, IState
 
 ### Другий приклад — `Enter<TState, TPayload>`
 
---------------------------- КОД ---------------------------
-<pre>
-public void Enter&lt;TState, TPayload&gt;(TPayload payload) where TState : class, IPayloadedState&lt;TPayload&gt;
+```csharp
+public void Enter<TState, TPayload>(TPayload payload) where TState : class, IPayloadedState<TPayload>
 {
     ...
     newState?.Enter(payload);
 }
-</pre>
-------------------------------------------------------------
+```
 
 Два типові параметри одночасно (`TState`, `TPayload`), кожен зі своїм роллю в обмеженні:
 `TState` має реалізовувати `IPayloadedState<TPayload>` — тобто мати `Enter(TPayload)`
@@ -91,27 +85,23 @@ public void Enter&lt;TState, TPayload&gt;(TPayload payload) where TState : class
 На ізольованому прикладі `Pair<TFirst, TSecond>` була спроба написати одну конструкцію
 на обидва параметри:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 // НЕПРАВИЛЬНО:
-public class Pair&lt;TFirst, TSecond&gt; where TFirst : class, TSecond : IState
-</pre>
-------------------------------------------------------------
+public class Pair<TFirst, TSecond> where TFirst : class, TSecond : IState
+```
 
 Це не компілюється так, як здається — кома всередині одного `where` додає **ще одну
 вимогу до того самого параметра** (`TFirst`), а не перемикає на `TSecond`. Правильно —
 окремий `where`-рядок для кожного типового параметра:
 
---------------------------- КОД ---------------------------
-<pre>
-public class Pair&lt;TFirst, TSecond&gt;
+```csharp
+public class Pair<TFirst, TSecond>
     where TFirst : class
     where TSecond : IState
 {
     ...
 }
-</pre>
-------------------------------------------------------------
+```
 
 ## `where T : class` проти `where T : КонкретнийКлас`
 
@@ -132,33 +122,29 @@ public class Pair&lt;TFirst, TSecond&gt;
 (`TService`) — і ці два типи повинні бути узгоджені між собою, інакше готовий
 об'єкт не вдасться привести до заявленого інтерфейсу.
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface IService { }
 public interface IAssetProvider : IService { }
 public interface IInputService : IService { }
 public class AssetProvider : IAssetProvider { }
 public class InputService : IInputService { }
 
-static void RegisterService&lt;TIService, TService&gt;()
+static void RegisterService<TIService, TService>()
     where TIService : class, IService
-    where TService : class, TIService // &lt;-- обмеження іншим типовим параметром
+    where TService : class, TIService // <-- обмеження іншим типовим параметром
 {
-    Console.WriteLine($"registering {typeof(TIService).Name} &lt;- {typeof(TService).Name}");
+    Console.WriteLine($"registering {typeof(TIService).Name} <- {typeof(TService).Name}");
 }
 
-RegisterService&lt;IAssetProvider, AssetProvider&gt;(); // ОК, AssetProvider реалізує IAssetProvider
-RegisterService&lt;IInputService, AssetProvider&gt;();  // навмисно неправильна пара
-</pre>
-------------------------------------------------------------
+RegisterService<IAssetProvider, AssetProvider>(); // ОК, AssetProvider реалізує IAssetProvider
+RegisterService<IInputService, AssetProvider>();  // навмисно неправильна пара
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
-registering IAssetProvider &lt;- AssetProvider
-error CS0311: The type 'AssetProvider' cannot be used as type parameter 'TService' in the generic type or method '...RegisterService&lt;TIService, TService&gt;()'.
+```
+registering IAssetProvider <- AssetProvider
+error CS0311: The type 'AssetProvider' cannot be used as type parameter 'TService' in the generic type or method '...RegisterService<TIService, TService>()'.
 There is no implicit reference conversion from 'AssetProvider' to 'IInputService'.
-</pre>
-------------------------------------------------------------
+```
 
 `where TService : class, TIService` — на місці, де зазвичай стоїть конкретний
 інтерфейс (як `where TState : IState` вище), підставлено інший типовий параметр
@@ -188,15 +174,13 @@ TIService` перенесла б цю перевірку на етап комп�
 **1 параметр** — коли всі місця, де використовується тип, повинні бути **тим самим**
 типом:
 
---------------------------- КОД ---------------------------
-<pre>
-public static T Max&lt;T&gt;(T a, T b) where T : IComparable&lt;T&gt;
+```csharp
+public static T Max<T>(T a, T b) where T : IComparable<T>
 {
-    return a.CompareTo(b) &gt; 0 ? a : b;
+    return a.CompareTo(b) > 0 ? a : b;
 }
 // Max(3, 7) — обидва аргументи мають бути одним і тим самим T
-</pre>
-------------------------------------------------------------
+```
 
 **2 параметри** — коли є дві незалежні "невідомі" (як `Enter<TState, TPayload>` вище:
 який стан і яким типом даних його нагодувати — одне з одним ніяк не пов'язане).
@@ -204,27 +188,23 @@ public static T Max&lt;T&gt;(T a, T b) where T : IComparable&lt;T&gt;
 **3 параметри** — коли з'являється ще одна незалежна вісь, наприклад результат
 комбінування двох різних типів:
 
---------------------------- КОД ---------------------------
-<pre>
-public static TResult Combine&lt;TA, TB, TResult&gt;(TA a, TB b, Func&lt;TA, TB, TResult&gt; combiner)
+```csharp
+public static TResult Combine<TA, TB, TResult>(TA a, TB b, Func<TA, TB, TResult> combiner)
 {
     return combiner(a, b);
 }
-// Combine(3, 4, (x, y) =&gt; x + y) — TA=int, TB=int, TResult=int, усі три виводяться самі
-</pre>
-------------------------------------------------------------
+// Combine(3, 4, (x, y) => x + y) — TA=int, TB=int, TResult=int, усі три виводяться самі
+```
 
 **4+ параметри — технічно працює, але вже сигнал зупинитись:**
 
---------------------------- КОД ---------------------------
-<pre>
-public class Quad&lt;T1, T2, T3, T4&gt;
+```csharp
+public class Quad<T1, T2, T3, T4>
 {
     public T1 A; public T2 B; public T3 C; public T4 D;
 }
-// виклик: SomeMethod&lt;int, string, bool, float&gt;(1, "x", true, 2.5f) — уже важко читати
-</pre>
-------------------------------------------------------------
+// виклик: SomeMethod<int, string, bool, float>(1, "x", true, 2.5f) — уже важко читати
+```
 
 На цьому етапі правильніший хід — згрупувати частину типів у звичайний
 клас/`struct`/tuple (так само, як два гіпотетичних payload'и `Enter`-у стали б одним

@@ -26,8 +26,7 @@
 Хто кого фізично будує, в якому порядку, починаючи з єдиної точки входу
 (`GameBootstrapper.Awake()`):
 
---------------------------- СХЕМА ---------------------------
-<pre>
+```
 GameBootstrapper (MonoBehaviour, Composition Root, реалізує ICoroutineRunner)
  │
  ├──new──▶ Game
@@ -52,8 +51,7 @@ GameBootstrapper (MonoBehaviour, Composition Root, реалізує ICoroutineRu
  │
  └── DontDestroyOnLoad(this) — зберігає GameBootstrapper і всю дочірню ієрархію
      (включно з LoadingCurtain) між сценами
-</pre>
-------------------------------------------------------------
+```
 
 ## 2. Ланцюжок переходів станів (FSM runtime)
 
@@ -62,11 +60,10 @@ GameBootstrapper (MonoBehaviour, Composition Root, реалізує ICoroutineRu
 стан наступний, приймає щоразу конкретний стан-виконавець, не сама машина
 (доказ OCP: додати новий перехід — це правка одного стану, не `GameStateMachine`):
 
---------------------------- СХЕМА ---------------------------
-<pre>
+```
 BootstrapState.Enter()
  │
- └──Enter&lt;LoadLevelState, string&gt;(SceneName)──▶ LoadLevelState.Enter(sceneName)
+ └──Enter<LoadLevelState, string>(SceneName)──▶ LoadLevelState.Enter(sceneName)
                                                     │
                                                     └── показує завісу, стартує
                                                         _sceneLoader.Load(...)
@@ -74,19 +71,17 @@ BootstrapState.Enter()
                                                         └── (коли сцена довантажена)
                                                             onLoaded()
                                                              │
-                                                             └──Enter&lt;GameLoopState&gt;()──▶ GameLoopState.Enter()
+                                                             └──Enter<GameLoopState>()──▶ GameLoopState.Enter()
                                                                                             (кінець ланцюжка,
                                                                                             поки немає переходу далі)
-</pre>
-------------------------------------------------------------
+```
 
 ## 3. Реєстр сервісів (`AllServices`)
 
 `AllServices` — не дерево, а центральний хаб: хтось кладе сервіс, хтось інший його
 дістає, вони не знають одне про одного напряму.
 
---------------------------- СХЕМА ---------------------------
-<pre>
+```
                     AllServices (eager static singleton)
                              ▲
                              │
@@ -96,16 +91,14 @@ BootstrapState.Enter()
    GameStateMachine (у власному конструкторі)
                                       ──resolve──▶ IAssetProvider ──▶ передає в GameLoopState
                                       ──resolve──▶ IInputService  ──▶ передає в GameLoopState
-</pre>
-------------------------------------------------------------
+```
 
 ## 4. Runtime-зв'язки (події)
 
 Єдина подія в проєкті поки — `IInputService.OnJumpPressed`. Дві окремі половини:
 хто її **зсередини** ретранслює з Unity, і хто на неї **зовні** підписаний.
 
---------------------------- СХЕМА ---------------------------
-<pre>
+```
 Unity Input System (рушій, NativeInputRuntime — не наш код)
  │
  └──invokes──▶ InputService: _inputActions.Player.Jump.performed (лямбда в конструкторі)
@@ -114,8 +107,7 @@ Unity Input System (рушій, NativeInputRuntime — не наш код)
                        │
                        └──subscribe──▶ GameLoopState.TestJump()
                              (підписка в Enter(), відписка в Exit() — симетрична пара)
-</pre>
-------------------------------------------------------------
+```
 
 ## 5. Класи — тезисно: залежності, що створює/реєструє, ключові методи/події
 

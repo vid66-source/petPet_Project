@@ -12,8 +12,7 @@ Action Map/Binding/Composite/Generate C# Class на рівні Unity-редак�
 незалежно від конкретної фізичної кнопки. Його можна створити вручну, без жодного
 asset'у чи "Generate C# Class":
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,7 +22,7 @@ public class InputActionTest : MonoBehaviour
 
     private void Awake()
     {
-        _jumpAction = new InputAction(binding: "&lt;Keyboard&gt;/space");
+        _jumpAction = new InputAction(binding: "<Keyboard>/space");
         _jumpAction.performed += OnJumpPerformed;
         _jumpAction.Enable();
     }
@@ -38,8 +37,7 @@ public class InputActionTest : MonoBehaviour
         _jumpAction.performed -= OnJumpPerformed;
     }
 }
-</pre>
-------------------------------------------------------------
+```
 
 Постав це на будь-який `GameObject`, натисни Play і Space — у Console полетить
 "Jump!". Це той самий тип `InputAction`, та сама подія `performed`, що й у
@@ -69,11 +67,10 @@ public class InputActionTest : MonoBehaviour
 Спрощено, приблизно так виглядає всередині самого `InputAction` (ілюстрація
 принципу, не реальний вихідний код Unity):
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class InputAction
 {
-    public event Action&lt;CallbackContext&gt; performed;
+    public event Action<CallbackContext> performed;
 
     // Unity сама викликає цей метод щокадру, читаючи стан заліза:
     private void ProcessCurrentValue()
@@ -84,8 +81,7 @@ public class InputAction
         }
     }
 }
-</pre>
-------------------------------------------------------------
+```
 
 Цей `ProcessCurrentValue` (чи як він насправді називається в реальному коді Unity)
 — частина рушія, яка щокадру опитує фізичну клавіатуру/мишу/геймпад і сама вирішує,
@@ -105,11 +101,9 @@ public class InputAction
 
 ## 3. Підписка через лямбду — розбір рядка з `InputService`
 
---------------------------- КОД ---------------------------
-<pre>
-_inputActions.Player.Jump.performed += _ =&gt; OnJumpPressed?.Invoke();
-</pre>
-------------------------------------------------------------
+```csharp
+_inputActions.Player.Jump.performed += _ => OnJumpPressed?.Invoke();
+```
 
 - `_inputActions` — поле типу `InputActions` (згенерований клас).
 - `.Player.Jump` — конкретний об'єкт `InputAction` усередині нього.
@@ -120,37 +114,34 @@ _inputActions.Player.Jump.performed += _ =&gt; OnJumpPressed?.Invoke();
 
 **Еквівалентні форми того самого рядка:**
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 // Варіант 1 — параметр "_" (як у InputService)
-_inputActions.Player.Jump.performed += _ =&gt; OnJumpPressed?.Invoke();
+_inputActions.Player.Jump.performed += _ => OnJumpPressed?.Invoke();
 
 // Варіант 2 — параметр з іменем, просто не використовується
-_inputActions.Player.Jump.performed += context =&gt; OnJumpPressed?.Invoke();
+_inputActions.Player.Jump.performed += context => OnJumpPressed?.Invoke();
 
 // Варіант 3 — з явно вказаним типом параметра (зайве тут, тип і так виводиться)
-_inputActions.Player.Jump.performed += (InputAction.CallbackContext context) =&gt; OnJumpPressed?.Invoke();
+_inputActions.Player.Jump.performed += (InputAction.CallbackContext context) => OnJumpPressed?.Invoke();
 
 // Варіант 4 — іменований метод замість лямбди
 _inputActions.Player.Jump.performed += OnJumpPerformed;
 
-private void OnJumpPerformed(InputAction.CallbackContext context) =&gt; OnJumpPressed?.Invoke();
-</pre>
-------------------------------------------------------------
+private void OnJumpPerformed(InputAction.CallbackContext context) => OnJumpPressed?.Invoke();
+```
 
 ### Сигнатура `Action<InputAction.CallbackContext>` розібрана повністю
 
 `.performed` усередині Unity оголошена саме так: `event Action<InputAction.CallbackContext> performed;`.
 Розкладемо цей тип на частини:
 
---------------------------- СХЕМА ---------------------------
-<pre>
-Action    &lt;    InputAction.CallbackContext    &gt;
+```
+Action    <    InputAction.CallbackContext    >
   │            │
   │            └─ типовий аргумент: один конкретний тип,
-  │               яким параметризовано Action&lt;T&gt;
+  │               яким параметризовано Action<T>
   │
-  └─ generic-делегат з .NET (System.Action&lt;T&gt;):
+  └─ generic-делегат з .NET (System.Action<T>):
      "посилання на метод, що приймає ОДИН параметр
      типу T і нічого не повертає (void)"
 
@@ -159,8 +150,7 @@ InputAction   .   CallbackContext
     │              └─ вкладений тип (struct), оголошений усередині InputAction
     │
     └─ зовнішній клас, що представляє одну гравецьку дію
-</pre>
-------------------------------------------------------------
+```
 
 Підставивши `T = InputAction.CallbackContext` у `Action<T>`, отримуємо: "посилання на
 метод з одним параметром типу `InputAction.CallbackContext`, що повертає `void`".
@@ -177,15 +167,13 @@ InputAction   .   CallbackContext
 
 **Що НЕ скомпілюється:**
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 // ПОМИЛКА КОМПІЛЯЦІЇ — лямбда без параметрів не підходить під
-// Action&lt;InputAction.CallbackContext&gt;: подія вимагає рівно один параметр,
+// Action<InputAction.CallbackContext>: подія вимагає рівно один параметр,
 // а тут його нуль. Компілятор виведе щось на кшталт:
-// "Delegate 'Action&lt;InputAction.CallbackContext&gt;' does not take 0 arguments"
-_inputActions.Player.Jump.performed += () =&gt; OnJumpPressed?.Invoke();
-</pre>
-------------------------------------------------------------
+// "Delegate 'Action<InputAction.CallbackContext>' does not take 0 arguments"
+_inputActions.Player.Jump.performed += () => OnJumpPressed?.Invoke();
+```
 
 `_` — не зарезервоване слово в класичному сенсі (не ключове слово мови), а
 спеціальний ідентифікатор, який компілятор (з C# 9) розпізнає як "discard": IDE не
@@ -198,8 +186,7 @@ _inputActions.Player.Jump.performed += () =&gt; OnJumpPressed?.Invoke();
 окремо. Це називається вкладений тип: один тип оголошений усередині іншого, бо існує
 тільки в його контексті. Мінімальний ізольований приклад того самого прийому:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class Order
 {
     public struct Item   // вкладений тип
@@ -211,8 +198,7 @@ public class Order
 
 // використання ззовні:
 Order.Item item = new Order.Item { Name = "Меч", Price = 100 };
-</pre>
-------------------------------------------------------------
+```
 
 `Item` існує тільки в контексті `Order` — немає сенсу робити його окремим top-level
 типом. Той самий принцип із `CallbackContext`: він завжди існує тільки в контексті
@@ -236,30 +222,26 @@ binding'у: одноосьовий контрол → `float`, стік/composit
 
 ### 5.1. Проста кнопка — `context` можна ігнорувати (як `Jump`)
 
---------------------------- КОД ---------------------------
-<pre>
-_fireAction = new InputAction("Fire", binding: "&lt;Mouse&gt;/leftButton");
-_fireAction.performed += _ =&gt; Shoot();
+```csharp
+_fireAction = new InputAction("Fire", binding: "<Mouse>/leftButton");
+_fireAction.performed += _ => Shoot();
 _fireAction.Enable();
-</pre>
-------------------------------------------------------------
+```
 
 Сам факт "клацнули" — вся потрібна інформація. Кнопка одна, значення не несе нічого
 (`Button` = просто так/ні).
 
 ### 5.2. Аналогове значення — `context` обов'язковий
 
---------------------------- КОД ---------------------------
-<pre>
-_zoomAction = new InputAction("Zoom", type: InputActionType.Value, binding: "&lt;Mouse&gt;/scroll/y");
-_zoomAction.performed += context =&gt;
+```csharp
+_zoomAction = new InputAction("Zoom", type: InputActionType.Value, binding: "<Mouse>/scroll/y");
+_zoomAction.performed += context =>
 {
-    float scrollDelta = context.ReadValue&lt;float&gt;();
+    float scrollDelta = context.ReadValue<float>();
     Debug.Log($"Прокрутка: {scrollDelta}");
 };
 _zoomAction.Enable();
-</pre>
-------------------------------------------------------------
+```
 
 Тут `.performed` спрацьовує щоразу, коли колесо миші прокручується, і щоразу з
 **іншим** значенням. Сам факт "подія відбулась" нічого не каже — потрібно знати
@@ -268,8 +250,7 @@ _zoomAction.Enable();
 
 ### 5.3. Кілька біндингів на одну дію — треба знати, ЯКА кнопка спрацювала
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -280,8 +261,8 @@ public class MultiBindingTest : MonoBehaviour
     private void Awake()
     {
         _fireAction = new InputAction("Fire");
-        _fireAction.AddBinding("&lt;Keyboard&gt;/space");
-        _fireAction.AddBinding("&lt;Mouse&gt;/leftButton");
+        _fireAction.AddBinding("<Keyboard>/space");
+        _fireAction.AddBinding("<Mouse>/leftButton");
         _fireAction.performed += OnFirePerformed;
         _fireAction.Enable();
     }
@@ -296,8 +277,7 @@ public class MultiBindingTest : MonoBehaviour
         _fireAction.performed -= OnFirePerformed;
     }
 }
-</pre>
-------------------------------------------------------------
+```
 
 Той самий обробник викликається і від Space, і від ЛКМ (це та сама дія `Fire`).
 Єдиний спосіб дізнатись, яка фізична кнопка це зробила — прочитати `context.control`.
@@ -305,20 +285,18 @@ public class MultiBindingTest : MonoBehaviour
 
 ### 5.4. `Interaction` — коли `.started`/`.performed`/`.canceled` це справді РІЗНІ моменти
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 _reloadAction = new InputAction(
     "Reload",
     type: InputActionType.Button,
-    binding: "&lt;Keyboard&gt;/r",
+    binding: "<Keyboard>/r",
     interactions: "hold(duration=1)");   // тримай R секунду
 
-_reloadAction.started += context =&gt; Debug.Log("Reload: почав тиснути R");
-_reloadAction.performed += context =&gt; Debug.Log("Reload: утримав секунду — перезарядка!");
-_reloadAction.canceled += context =&gt; Debug.Log("Reload: відпустив R ЗАРАНО — скасовано");
+_reloadAction.started += context => Debug.Log("Reload: почав тиснути R");
+_reloadAction.performed += context => Debug.Log("Reload: утримав секунду — перезарядка!");
+_reloadAction.canceled += context => Debug.Log("Reload: відпустив R ЗАРАНО — скасовано");
 _reloadAction.Enable();
-</pre>
-------------------------------------------------------------
+```
 
 Що реально станеться в Play Mode:
 - Натиснув `R` і одразу відпустив (менше секунди) → `"почав тиснути R"`, потім одразу
@@ -334,8 +312,7 @@ _reloadAction.Enable();
 
 ## 6. Повний робочий приклад — усі варіанти разом
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -347,13 +324,13 @@ public class WeaponInputTest : MonoBehaviour
 
     private void Awake()
     {
-        _fireAction = new InputAction("Fire", binding: "&lt;Mouse&gt;/leftButton");
+        _fireAction = new InputAction("Fire", binding: "<Mouse>/leftButton");
         _fireAction.performed += OnFirePerformed;
 
-        _zoomAction = new InputAction("Zoom", type: InputActionType.Value, binding: "&lt;Mouse&gt;/scroll/y");
+        _zoomAction = new InputAction("Zoom", type: InputActionType.Value, binding: "<Mouse>/scroll/y");
         _zoomAction.performed += OnZoomPerformed;
 
-        _reloadAction = new InputAction("Reload", binding: "&lt;Keyboard&gt;/r", interactions: "hold(duration=1)");
+        _reloadAction = new InputAction("Reload", binding: "<Keyboard>/r", interactions: "hold(duration=1)");
         _reloadAction.started += OnReloadStarted;
         _reloadAction.performed += OnReloadPerformed;
         _reloadAction.canceled += OnReloadCanceled;
@@ -363,14 +340,14 @@ public class WeaponInputTest : MonoBehaviour
         _reloadAction.Enable();
     }
 
-    private void OnFirePerformed(InputAction.CallbackContext context) =&gt; Debug.Log("BANG!");
+    private void OnFirePerformed(InputAction.CallbackContext context) => Debug.Log("BANG!");
 
     private void OnZoomPerformed(InputAction.CallbackContext context)
-        =&gt; Debug.Log($"Zoom: {context.ReadValue&lt;float&gt;()}");
+        => Debug.Log($"Zoom: {context.ReadValue<float>()}");
 
-    private void OnReloadStarted(InputAction.CallbackContext context) =&gt; Debug.Log("Reload: почав тиснути R");
-    private void OnReloadPerformed(InputAction.CallbackContext context) =&gt; Debug.Log("Reload: перезарядка!");
-    private void OnReloadCanceled(InputAction.CallbackContext context) =&gt; Debug.Log("Reload: скасовано, відпустив зарано");
+    private void OnReloadStarted(InputAction.CallbackContext context) => Debug.Log("Reload: почав тиснути R");
+    private void OnReloadPerformed(InputAction.CallbackContext context) => Debug.Log("Reload: перезарядка!");
+    private void OnReloadCanceled(InputAction.CallbackContext context) => Debug.Log("Reload: скасовано, відпустив зарано");
 
     private void OnDestroy()
     {
@@ -381,8 +358,7 @@ public class WeaponInputTest : MonoBehaviour
         _reloadAction.canceled -= OnReloadCanceled;
     }
 }
-</pre>
-------------------------------------------------------------
+```
 
 Зверни увагу: тут усі обробники — **іменовані методи**, не інлайн-лямбди. Це не
 випадково — див. §8 нижче про те, чому саме тут відписка потрібна і чому вона

@@ -35,8 +35,7 @@
 - `typeof(X)` — тип відомий **у коді**, на етапі компіляції.
 - `obj.GetType()` — тип відомий лише в рантаймі, з конкретного вже наявного об'єкта.
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class Robot
 {
     public Robot(string name, int power)
@@ -48,15 +47,12 @@ public class Robot
 Type type = typeof(Robot);
 Console.WriteLine(type.Name);      // коротке ім'я
 Console.WriteLine(type.FullName);  // з неймспейсом, якщо є
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 Robot
 Robot
-</pre>
-------------------------------------------------------------
+```
 
 Обидва однакові, бо `Robot` тут — top-level клас без `namespace`. З `namespace
 MyGame` — `FullName` показав би `MyGame.Robot`, `Name` лишився б просто `Robot`.
@@ -68,20 +64,16 @@ MyGame` — `FullName` показав би `MyGame.Robot`, `Name` лишився
 `GetConstructors()` (множина) — повертає **всі** публічні конструктори типу, без
 фільтрів:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 ConstructorInfo[] all = typeof(Robot).GetConstructors();
 Console.WriteLine(all.Length); // скільки їх
 Console.WriteLine(all[0]);     // сигнатура першого
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 1
 Void .ctor(System.String, Int32)
-</pre>
-------------------------------------------------------------
+```
 
 `Void .ctor(System.String, Int32)` — текстове представлення сигнатури: `Void`
 (конструктор "нічого не повертає"), `.ctor` (службова назва — **однакова для
@@ -95,22 +87,18 @@ Void .ctor(System.String, Int32)
 `GetConstructor(Type[] types)` (однина) — шукає **точно** ту сигнатуру, яку йому
 назвали. Повертає один `ConstructorInfo` або `null`, якщо такого нема:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 ConstructorInfo? noArgs = typeof(Robot).GetConstructor(Type.EmptyTypes);
 Console.WriteLine(noArgs == null); // у Robot нема конструктора без параметрів
 
 ConstructorInfo? matched = typeof(Robot).GetConstructor(new[] { typeof(string), typeof(int) });
 Console.WriteLine(matched);
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 True
 Void .ctor(System.String, Int32)
-</pre>
-------------------------------------------------------------
+```
 
 `Type.EmptyTypes` — готовий, спільний для всього .NET, статичний `Type[]`
 довжини 0 — скорочення замість `new Type[0]`.
@@ -124,8 +112,7 @@ Void .ctor(System.String, Int32)
 
 Коли `GetConstructors()` повернув масив, а працювати треба з одним елементом:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class TwoCtors
 {
     public TwoCtors() { }
@@ -134,15 +121,12 @@ public class TwoCtors
 
 ConstructorInfo a = typeof(TwoCtors).GetConstructors()[0];       // мовчки бере перший
 ConstructorInfo b = typeof(TwoCtors).GetConstructors().Single(); // вимагає РІВНО 1
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
-a -&gt; Void .ctor()
-b -&gt; System.InvalidOperationException: Sequence contains more than one element
-</pre>
-------------------------------------------------------------
+```
+a -> Void .ctor()
+b -> System.InvalidOperationException: Sequence contains more than one element
+```
 
 `[0]` бере перший елемент масиву, яким би він не був — мовчки, без перевірки, чи
 він єдиний. `.Single()` (LINQ, `System.Linq`) вимагає, щоб елемент був **рівно
@@ -158,22 +142,18 @@ b -&gt; System.InvalidOperationException: Sequence contains more than one elemen
 
 ## 3. Параметри конструктора/методу — `ParameterInfo`
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 ConstructorInfo constructor = typeof(Robot).GetConstructors()[0];
 ParameterInfo[] parameters = constructor.GetParameters();
 
 foreach (ParameterInfo p in parameters)
     Console.WriteLine($"{p.Name}: {p.ParameterType}");
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 name: System.String
 power: System.Int32
-</pre>
-------------------------------------------------------------
+```
 
 `GetParameters()` повертає масив **описів** параметрів — не значень. `.Name` —
 ім'я параметра як текст. `.ParameterType` — той самий `Type`-об'єкт, що й у
@@ -185,20 +165,16 @@ power: System.Int32
 `ConstructorInfo.Invoke(object[] args)` — реально виконує конструктор і повертає
 новий об'єкт:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 object[] args = { "R2D2", 100 };
 object robot = constructor.Invoke(args);
 Console.WriteLine(robot.GetType());
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 Robot R2D2 created with power 100
 Robot
-</pre>
-------------------------------------------------------------
+```
 
 Перший рядок виводу — `Console.WriteLine` **зсередини самого конструктора**
 `Robot` — доказ, що виконався реальний конструктор, не підробка.
@@ -214,18 +190,14 @@ Robot
 (`int`) це означає **boxing** — прихована обгортка в купі, щоб `100` взагалі
 можна було покласти в змінну типу `object`:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 object boxed = 100;
 Console.WriteLine(boxed.GetType()); // обгортка пам'ятає реальний тип
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 System.Int32
-</pre>
-------------------------------------------------------------
+```
 
 Сама сигнатура `Invoke(object[] parameters)` — рішення авторів `System.Reflection`,
 не вибір розробника: `Invoke` мусить працювати з **будь-яким** конструктором
@@ -234,12 +206,10 @@ System.Int32
 **Ціна цієї гнучкості — нуль перевірки типів компілятором.** Помилки
 з'ясовуються лише в рантаймі, як виняток:
 
---------------------------- ВИВІД ---------------------------
-<pre>
-переплутаний порядок аргументів   -&gt; System.ArgumentException: Object of type 'System.Int32' cannot be converted to type 'System.String'.
-неправильна кількість аргументів -&gt; System.Reflection.TargetParameterCountException: Parameter count mismatch.
-</pre>
-------------------------------------------------------------
+```
+переплутаний порядок аргументів   -> System.ArgumentException: Object of type 'System.Int32' cannot be converted to type 'System.String'.
+неправильна кількість аргументів -> System.Reflection.TargetParameterCountException: Parameter count mismatch.
+```
 
 Звичайний `new Robot(100, "R2D2")` такого типу помилку компілятор впіймав би
 одразу; з рефлексією цей захист зникає.
@@ -250,20 +220,17 @@ System.Int32
 наперед), масив аргументів варто будувати за розміром `parameters`, а не
 перевіряти окремо "а раптом їх нуль":
 
---------------------------- КОД ---------------------------
-<pre>
-object[] args = new object[parameters.Length]; // 0 параметрів -&gt; порожній масив сам собою
+```csharp
+object[] args = new object[parameters.Length]; // 0 параметрів -> порожній масив сам собою
 // ... заповнити args[i] для кожного parameters[i] ...
 object instance = constructor.Invoke(args);
-</pre>
-------------------------------------------------------------
+```
 
 Перевірено: і `null`, і порожній `new object[0]` спрацьовують на `Invoke` так
 само, як і заповнений масив — окремого `if` для "0 параметрів" не треба.
 Конкретний приклад із самим конструктором без параметрів:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class Drone
 {
     public Drone()
@@ -281,17 +248,14 @@ Console.WriteLine($"args.Length = {args.Length}");
 
 object instance = constructor.Invoke(args);
 Console.WriteLine(instance.GetType());
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 parameters.Length = 0
 args.Length = 0
 Drone created, no parameters needed
 Drone
-</pre>
-------------------------------------------------------------
+```
 
 `GetParameters()` для конструктора без параметрів повертає порожній
 `ParameterInfo[]` (`Length = 0`, не `null`) → `new object[0]` — так само легальний
@@ -306,8 +270,7 @@ Drone
 власний конструктор (а не просто підставити готове значення) — той самий підхід
 з розділу 4 застосовується рекурсивно, за `ParameterType` кожного параметра:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class Engine
 {
     public Engine() { Console.WriteLine("Engine created"); }
@@ -326,21 +289,18 @@ static object ResolveRecursively(Type type)
     ConstructorInfo constructor = type.GetConstructors()[0];
     ParameterInfo[] parameters = constructor.GetParameters();
     object[] args = new object[parameters.Length];
-    for (int i = 0; i &lt; parameters.Length; i++)
+    for (int i = 0; i < parameters.Length; i++)
         args[i] = ResolveRecursively(parameters[i].ParameterType); // рекурсія за ParameterType
     return constructor.Invoke(args);
 }
 
 object car = ResolveRecursively(typeof(Car));
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 Engine created
 Car created with Engine
-</pre>
-------------------------------------------------------------
+```
 
 `parameters[i].ParameterType` — це вираз (property access на елементі масиву), не
 іменована змінна; аргументом методу може бути будь-який вираз потрібного типу,
@@ -357,8 +317,7 @@ Car created with Engine
 безпосередньо. Щойно параметр — інтерфейс, той самий метод ламається на тому ж
 місці, що й розділ 2 (`[0]` на порожньому масиві):
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface IEngine { }
 public class SmartCar
 {
@@ -369,14 +328,11 @@ public class SmartCar
 }
 
 object smartCar = ResolveRecursively(typeof(SmartCar));
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 System.IndexOutOfRangeException: Index was outside the bounds of the array.
-</pre>
-------------------------------------------------------------
+```
 
 Причина та сама, що й для `typeof(IEngine).GetConstructors()` у розділі 2:
 інтерфейс не має жодного конструктора, масив порожній, `[0]` на порожньому
@@ -390,8 +346,7 @@ System.IndexOutOfRangeException: Index was outside the bounds of the array.
 Інша задача, ніж розділ 4: не створити об'єкт, а викликати на **вже готовому**
 об'єкті метод, ім'я якого відоме лише як рядок.
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public class Calculator
 {
     public Calculator(int start) { Value = start; }
@@ -404,14 +359,11 @@ object calc = typeof(Calculator).GetConstructors()[0].Invoke(new object[] { 10 }
 MethodInfo addMethod = typeof(Calculator).GetMethod("Add");
 object result = addMethod.Invoke(calc, new object[] { 5 }); // на calc, з аргументом 5
 Console.WriteLine(result);
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 15
-</pre>
-------------------------------------------------------------
+```
 
 Ключова відмінність сигнатур: `ConstructorInfo.Invoke(object[] args)` — **один**
 аргумент (конструктор завжди створює новий об'єкт). `MethodInfo.Invoke(object
@@ -423,28 +375,24 @@ obj, object[] args)` — **два**: перший каже, **на якому** 
 Стосується класу **без** `<T>` на собі, у якого generic лише один конкретний
 метод (типовий параметр належить методу, не класу):
 
---------------------------- КОД ---------------------------
-<pre>
-public class Box               // звичайний клас, БЕЗ &lt;T&gt;
+```csharp
+public class Box               // звичайний клас, БЕЗ <T>
 {
-    public T GetValue&lt;T&gt;() =&gt; default(T); // а метод -- generic
+    public T GetValue<T>() => default(T); // а метод -- generic
 }
 
 MethodInfo unbound = typeof(Box).GetMethod("GetValue");
 Console.WriteLine(unbound.IsGenericMethodDefinition); // ще не закритий
 
 MethodInfo bound = unbound.MakeGenericMethod(typeof(int)); // закрили T = int
-object result = bound.Invoke(new Box(), null); // без параметрів методу -&gt; null
+object result = bound.Invoke(new Box(), null); // без параметрів методу -> null
 Console.WriteLine(result);
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 True
 0
-</pre>
-------------------------------------------------------------
+```
 
 `unbound` — "шаблон" методу, ще без конкретного `T`. `MakeGenericMethod(typeof(int))`
 підставляє `T = int` і повертає новий, уже "закритий" `MethodInfo`, готовий до
@@ -459,30 +407,26 @@ generic, і потрібний тип для нього відомий лише 
 Дзеркальний випадок до розділу 6: тепер "невідомість" сидить у **класі**
 (`Box<T>`), не в окремому методі:
 
---------------------------- КОД ---------------------------
-<pre>
-public class Box&lt;T&gt;
+```csharp
+public class Box<T>
 {
     private T _value;
-    public void Put(T value) =&gt; _value = value;
-    public T Take() =&gt; _value;
+    public void Put(T value) => _value = value;
+    public T Take() => _value;
 }
 
-Type openType = typeof(Box&lt;&gt;);                    // шаблон, T ще не підставлений
-Type closedType = openType.MakeGenericType(typeof(int)); // Box&lt;int&gt;
+Type openType = typeof(Box<>);                    // шаблон, T ще не підставлений
+Type closedType = openType.MakeGenericType(typeof(int)); // Box<int>
 
-object instance = Activator.CreateInstance(closedType); // new Box&lt;int&gt;() не напишеш -- int невідомий у коді
+object instance = Activator.CreateInstance(closedType); // new Box<int>() не напишеш -- int невідомий у коді
 closedType.GetMethod("Put").Invoke(instance, new object[] { 99 });
 object result = closedType.GetMethod("Take").Invoke(instance, null);
 Console.WriteLine(result);
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 99
-</pre>
-------------------------------------------------------------
+```
 
 `MakeGenericType` — метод на `Type`, аналог `MakeGenericMethod` рівнем вище: не
 метод закриває свій `T`, а весь тип. Раз тип уже закритий (`Box<int>`), звичайний
@@ -506,13 +450,11 @@ False`), викликаються звичайним `Invoke`, без `MakeGener
 | **Закритий** (closed constructed) | `typeof(Box<int>)` | False | **False** |
 | **Відкритий сконструйований** (open constructed) — тип підставлений частково | `List<T>`, де `T` ще не підставлений (наприклад, узятий із поля `typeof(Outer<>)`) | False | **True** |
 
---------------------------- ВИВІД ---------------------------
-<pre>
-typeof(Box&lt;&gt;)     -&gt; IsGenericTypeDefinition True,  ContainsGenericParameters True
-typeof(Box&lt;int&gt;)  -&gt; IsGenericTypeDefinition False, ContainsGenericParameters False
-List&lt;T&gt; (T не підставлений) -&gt; IsGenericTypeDefinition False, ContainsGenericParameters True
-</pre>
-------------------------------------------------------------
+```
+typeof(Box<>)     -> IsGenericTypeDefinition True,  ContainsGenericParameters True
+typeof(Box<int>)  -> IsGenericTypeDefinition False, ContainsGenericParameters False
+List<T> (T не підставлений) -> IsGenericTypeDefinition False, ContainsGenericParameters True
+```
 
 Пастка видно в рядках 2 і 3: **обидва** дають `IsGenericTypeDefinition -> False`,
 хоча в третьому `T` явно не підставлений. `IsGenericTypeDefinition` перевіряє
@@ -525,15 +467,14 @@ List&lt;T&gt; (T не підставлений) -&gt; IsGenericTypeDefinition Fa
 `where T : class, ISomething` розпадається у рефлексії на дві різні речі, і CLR
 сам перевіряє їх під час `MakeGenericMethod` — **до** `Invoke`:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface IService { }
 public class GoodService : IService { }
 public class NotAService { } // не реалізує IService
 
 public class Container
 {
-    public T GetService&lt;T&gt;() where T : class, IService =&gt; null;
+    public T GetService<T>() where T : class, IService => null;
 }
 
 MethodInfo unbound = typeof(Container).GetMethod("GetService");
@@ -543,16 +484,13 @@ Console.WriteLine(tParam.GetGenericParameterConstraints()[0]); // IService
 
 unbound.MakeGenericMethod(typeof(GoodService));  // ОК
 unbound.MakeGenericMethod(typeof(NotAService));  // ?
-</pre>
-------------------------------------------------------------
+```
 
---------------------------- ВИВІД ---------------------------
-<pre>
+```
 ReferenceTypeConstraint
 IService
 System.ArgumentException: GenericArguments[0], 'NotAService', on 'T GetService[T]()' violates the constraint of type 'T'.
-</pre>
-------------------------------------------------------------
+```
 
 `class` (обмеження "reference-тип") стає прапорцем `GenericParameterAttributes`
 (`ReferenceTypeConstraint`); `IService` (обмеження "реалізує цей інтерфейс") —

@@ -6,8 +6,7 @@
 
 ## Ізольований приклад
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface ICanMakeSound
 {
     void MakeSound();
@@ -15,27 +14,24 @@ public interface ICanMakeSound
 
 public class Dog : ICanMakeSound
 {
-    public void MakeSound() =&gt; Console.WriteLine("Гав!");
+    public void MakeSound() => Console.WriteLine("Гав!");
 }
 
 public class Cat : ICanMakeSound
 {
-    public void MakeSound() =&gt; Console.WriteLine("Няв!");
+    public void MakeSound() => Console.WriteLine("Няв!");
 }
-</pre>
-------------------------------------------------------------
+```
 
 Ідея: код, який хоче "змусити когось видати звук", не повинен знати, чи це `Dog`, чи
 `Cat`, чи будь-хто ще — йому достатньо знати, що об'єкт **уміє** `MakeSound()`:
 
---------------------------- КОД ---------------------------
-<pre>
-void MakeItSound(ICanMakeSound animal) =&gt; animal.MakeSound();
+```csharp
+void MakeItSound(ICanMakeSound animal) => animal.MakeSound();
 
 MakeItSound(new Dog()); // "Гав!"
 MakeItSound(new Cat()); // "Няв!"
-</pre>
-------------------------------------------------------------
+```
 
 Інтерфейс — контракт "що об'єкт уміє робити", без жодної прив'язки до того, **як** саме
 він це робить усередині. Клас, що реалізує інтерфейс, зобов'язаний надати тіло для
@@ -43,13 +39,11 @@ MakeItSound(new Cat()); // "Няв!"
 
 ## Реальний приклад із проєкту
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface IExitableState { void Exit(); }
 public interface IState : IExitableState { void Enter(); }
-public interface IPayloadedState&lt;TPayload&gt; : IExitableState { void Enter(TPayload payload); }
-</pre>
-------------------------------------------------------------
+public interface IPayloadedState<TPayload> : IExitableState { void Enter(TPayload payload); }
+```
 
 `BootstrapState`, `LoadLevelState`, `GameLoopState` — три зовсім різні класи з різною
 логікою всередині, але `GameStateMachine` працює з ними тільки через ці контракти
@@ -67,11 +61,9 @@ public interface IPayloadedState&lt;TPayload&gt; : IExitableState { void Enter(T
 
 Уперше трапилось: урок 02, `IService` — інтерфейс, у якому немає жодного методу:
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 public interface IService { }
-</pre>
-------------------------------------------------------------
+```
 
 На перший погляд безглуздо — навіщо контракт, який нічого не обіцяє? Сенс тут не в
 методах, а в самому факті "цей клас належить до такої категорії" — компілятор уміє

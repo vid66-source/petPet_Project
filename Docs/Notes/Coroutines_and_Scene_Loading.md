@@ -27,8 +27,7 @@
 
 ## Корутина, яка чекає завершення
 
---------------------------- КОД ---------------------------
-<pre>
+```csharp
 private IEnumerator LoadScene(string sceneName, Action onLoaded)
 {
     AsyncOperation sceneLoadOperation = SceneManager.LoadSceneAsync(sceneName);
@@ -38,8 +37,7 @@ private IEnumerator LoadScene(string sceneName, Action onLoaded)
     }
     onLoaded?.Invoke();
 }
-</pre>
-------------------------------------------------------------
+```
 
 `IEnumerator` — стандартний .NET-інтерфейс для ітераторів, але Unity використовує його
 по-особливому для корутин через `MonoBehaviour.StartCoroutine` (звідси й
