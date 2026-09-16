@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"name": "petPet Notes",
+			"path": "Docs"
+		}
+	],
+	"settings": {
+		"workbench.startupEditor": "readme",
+		"markdown.preview.breaks": true,
+		"editor.wordWrap": "on",
+		"editor.quickSuggestions": {
+			"other": false,
+			"comments": false,
+			"strings": false
+		},
+		"outline.showStrings": false
+	},
+	"extensions": {
+		"recommendations": [
+			"yzhang.markdown-all-in-one",
+			"davidanson.vscode-markdownlint"
+		]
+	}
+}
