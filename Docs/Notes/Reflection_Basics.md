@@ -100,8 +100,35 @@ True
 Void .ctor(System.String, Int32)
 ```
 
-`Type.EmptyTypes` — готовий, спільний для всього .NET, статичний `Type[]`
-довжини 0 — скорочення замість `new Type[0]`.
+`Type.EmptyTypes` — готове, спільне для всього .NET, статичне поле типу `Type[]`
+довжини 0 — скорочення замість `new Type[0]`, коли API вимагає `Type[]`, а
+сказати нема чого (конструктор/метод без параметрів). Перевірено запуском:
+
+```csharp
+Console.WriteLine(Type.EmptyTypes.GetType());
+Console.WriteLine(Type.EmptyTypes.Length);
+Console.WriteLine(ReferenceEquals(Type.EmptyTypes, Type.EmptyTypes));
+
+Type[] manual = new Type[0];
+Console.WriteLine(ReferenceEquals(Type.EmptyTypes, manual));
+Console.WriteLine(ReferenceEquals(manual, new Type[0]));
+```
+
+```
+System.Type[]
+0
+True
+False
+False
+```
+
+`ReferenceEquals(Type.EmptyTypes, Type.EmptyTypes) -> True` доводить: це не
+"конструктор масиву", а вже готовий, **один і той самий** об'єкт щоразу, коли
+до нього звертаються. `new Type[0]`, навпаки, щоразу створює новий об'єкт-масив
+нульової довжини — два окремі `new Type[0]` між собою теж не той самий об'єкт
+(`ReferenceEquals -> False`). Функціонально для `GetConstructor` різниці немає
+(обидва варіанти знаходять той самий безпараметровий конструктор), але
+`Type.EmptyTypes` не виділяє нову пам'ять щоразу, `new Type[0]` — виділяє.
 
 **Коли застосовний цей метод, а коли ні:** тільки коли типи параметрів **уже
 відомі** в коді, що пише виклик. Якщо мета — навпаки, дізнатись, чого хоче
