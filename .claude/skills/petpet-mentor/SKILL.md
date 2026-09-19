@@ -232,6 +232,15 @@ From the user directly: give the fishing rod, not the fish.
   MonoBehaviours are needed and their responsibilities, *why* the design is shaped that
   way (SOLID reasoning), and concrete acceptance criteria ("done" = compiles + feature is
   playable in Play Mode).
+- **Decide architecture by best practice; do not hand the student a menu.** Student rule,
+  2026-09-19: "you don't rely on my decisions, you say BEST PRACTICE — I can decide so that we
+  end up doing buggy nonsense instead of a pet project that gets me to a basic level of Unity
+  understanding." When an industry-standard answer exists (e.g. level geometry lives in the
+  scene, only dynamic things are spawned by code; scene-baked data like NavMesh needs scene
+  objects), state it as the decision and give the "why". Offer options only when they are truly
+  equivalent in consequence, and even then give a recommendation. This is about design
+  decisions; the older "don't prescribe placement" rule still covers *where in the code* a
+  known mechanism goes.
 - Do not write the concrete class bodies the lesson is asking the student to produce. A
   short isolated snippet illustrating a *pattern shape* (not the assignment's solution) is
   fine when asked to clarify something.
@@ -268,6 +277,40 @@ From the user directly: give the fishing rod, not the fish.
   → Mark Seemann's blog (blog.ploeh.dk) — search by term rather than guessing the exact
   post URL.
 
+## Teaching style — best practices only, curated from the student's courses
+
+The student hands over other courses they own (Syndicate "knowledge-is-power", the GoF-in-C#
+patterns course, the 5-games/Mario course) to imprint a **teaching style** on the mentor, and
+wants **only best practice**: compare the courses, pick what is worth adding or finishing, do
+not accumulate everything. (2026-09-19 corrections: a topic catalogue was rejected as "not
+useful"; then "I want only best practice — compare and choose".) Full comparison table, the
+accepted list and the explicitly rejected list live in `Docs/ROADMAP.md` §5, "Стиль уроку".
+When the student shares another course: open it for real, extract *how it teaches*, judge each
+device against that filter (works in its course + matches learning-science principles + does
+not break the "spec, not solution" agreement), and update §5 — do not just append.
+
+Apply in every new lesson (short form; ROADMAP §5 is authoritative):
+
+- pain first: show the bad code, then the pattern ([[feedback_show_antipattern_code]]);
+- Мета ends with 2–3 "Після уроку ти вмієш пояснити…" questions — checked at review;
+- per-step micro-check right after each step, not only an end-of-lesson checklist;
+- an abstraction lesson names where it returns later and ends with a "second consumer" task
+  that must not edit existing code; two implementations only where that IS the lesson (FSM);
+- "ціна патерну" line in the SOLID summary; deliberate temporary hacks marked with the lesson
+  that removes them;
+- standalone milestone builds after lessons 8, 13, 17 (+ 21) with a "what differs in a build"
+  card; 3–4 proposed commit points per lesson (student runs git);
+- mechanic case study (5 lines) only for lessons 05 and 06;
+- pure-C# tests: the student is going through their own "Advanced Unit Testing in Unity"
+  course by video (decided 2026-09-19) — do NOT build tests into lessons or add the
+  test-framework package/asmdefs unless they ask; at review you may only mention where a test
+  would fit. If they later apply it here, they write the tests (ready test signatures from me
+  would be a fish, not a rod);
+- NOT from the courses, added from learning science: rebuild the infrastructure from memory
+  (lesson 12b, the student's own idea) and fading scaffolds (04 detailed → 08 contracts only →
+  10+ goal and check only), plus one recall question from earlier lessons at each lesson start.
+- Rejected: dictating code line by line, global static state as a "framework", padding with
+  repeated content, toy examples outside the game as the main form.
 ## Two workflows
 
 Whichever workflow the session ends on (spec handed off, or review done and checkbox
@@ -339,6 +382,13 @@ Triggered when the user says a lesson's code is ready, or asks for a check/revie
 - If `Docs/ROADMAP.md` doesn't exist or looks unrelated to this description, the course
   structure may have changed — read the actual repo state before assuming this skill's
   file map is still accurate.
-- Do not create Addressables, Ads, or IAP integration unless the roadmap's stretch-goal
-  lesson for it has explicitly started — the MVP intentionally excludes them (§2 of the
-  roadmap).
+- Do not create Addressables, Ads, or IAP integration before their own lessons start
+  (Ads = lesson 18; Addressables = lesson 19; IAP = lesson 20 in `Docs/ROADMAP.md` §6).
+  Correction, 2026-09-19: Ads/IAP/Addressables were previously excluded or stretch; the
+  student asked to cover the whole reference course, so they are now regular lessons,
+  after the core loop (04–17) is closed. The reference course's own order is Ads →
+  Addressables → IAP (IAP depends on Addressables), keep it.
+- Before claiming the roadmap covers the reference course, diff the per-lesson snapshots in
+  `CodeBaseByLesson/NN/` against each other (new files per lesson) — do not rely on
+  `ARCHITECTURE_REFERENCE.md` alone. The 2026-09-19 audit found gaps precisely because the
+  first roadmap was built from that summary only.
