@@ -8,7 +8,8 @@ namespace CodeBase.Infrastructure.States
     {
         private readonly IAssetProvider _assetProvider;
         private readonly IInputService _inputService;
-        private readonly string _assetPath = "TestObject";
+        private readonly string _assetPath = "Player";
+        private readonly Vector3 _startPlayerPos = new Vector3(0.0f, 1.0f, 0.0f);
 
         public GameLoopState(IAssetProvider assetProvider, IInputService inputService)
         {
@@ -20,7 +21,7 @@ namespace CodeBase.Infrastructure.States
         {
             Debug.Log($"[FSM] Enter {GetType().Name}");
             var obj = _assetProvider.LoadAsset(_assetPath);
-            _assetProvider.SpawnAsset(obj, Vector3.one, Quaternion.identity);
+            _assetProvider.SpawnAsset(obj, _startPlayerPos, Quaternion.identity);
             _inputService.OnJumpPressed += TestJump;
         }
 
