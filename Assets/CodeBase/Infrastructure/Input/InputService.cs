@@ -18,8 +18,8 @@ namespace CodeBase.Infrastructure.Input
 
         public Vector2 GetDirection()
         {
-            Vector2 direction = _inputActions.Player.Move.ReadValue<Vector2>();
-            return direction;
+            Vector2 moveDirection = _inputActions.Player.Move.ReadValue<Vector2>();
+            return moveDirection;
         }
     }
 }

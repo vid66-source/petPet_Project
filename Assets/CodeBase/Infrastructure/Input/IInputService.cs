@@ -6,8 +6,8 @@ namespace CodeBase.Infrastructure.Input
 {
     public interface IInputService : IService
     {
-        Vector2 GetDirection();
-
         event Action OnJumpPressed;
+
+        Vector2 GetDirection();
     }
 }
