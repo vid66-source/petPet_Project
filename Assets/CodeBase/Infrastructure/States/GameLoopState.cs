@@ -1,5 +1,6 @@
 ﻿using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Input;
+using CodeBase.Player;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
@@ -20,19 +21,15 @@ namespace CodeBase.Infrastructure.States
         public void Enter()
         {
             Debug.Log($"[FSM] Enter {GetType().Name}");
-            var obj = _assetProvider.LoadAsset(_assetPath);
-            _assetProvider.SpawnAsset(obj, _startPlayerPos, Quaternion.identity);
-            _inputService.OnJumpPressed += TestJump;
-        }
-
-        private void TestJump()
-        {
-            Debug.Log("Jump Action!");
+            GameObject playerPrefab = _assetProvider.LoadAsset(_assetPath);
+            GameObject playerOnScene = _assetProvider.SpawnAsset(playerPrefab, _startPlayerPos, Quaternion.identity);
+            PlayerController playerController = playerOnScene.GetComponent<PlayerController>();
+            playerController.Construct(_inputService);
         }
 
         public void Exit()
         {
-            _inputService.OnJumpPressed -= TestJump;
+
         }
     }
 }

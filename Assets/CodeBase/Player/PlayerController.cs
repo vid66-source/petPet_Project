@@ -1,18 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
+using CodeBase.Infrastructure.Input;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+namespace CodeBase.Player
 {
-    // Start is called before the first frame update
-    void Start()
+    public class PlayerController : MonoBehaviour
     {
-        
-    }
+        private IInputService _inputService;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public void Construct(IInputService inputService)
+        {
+            _inputService = inputService;
+        }
     }
 }
