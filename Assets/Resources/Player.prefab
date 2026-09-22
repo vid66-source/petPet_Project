@@ -125,3 +125,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _characterController: {fileID: 903086652848542279}
   _moveSpeed: 6
+  _jumpHeight: 1.5
