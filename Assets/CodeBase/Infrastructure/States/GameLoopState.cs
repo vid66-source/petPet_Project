@@ -10,7 +10,7 @@ namespace CodeBase.Infrastructure.States
         private readonly IAssetProvider _assetProvider;
         private readonly IInputService _inputService;
         private readonly string _assetPath = "Player";
-        private readonly Vector3 _startPlayerPos = new Vector3(0.0f, 6.0f, 0.0f);
+        private readonly Vector3 _startPlayerPos =  new Vector3(0.0f, 1.0f, 0.0f);
 
         public GameLoopState(IAssetProvider assetProvider, IInputService inputService)
         {
