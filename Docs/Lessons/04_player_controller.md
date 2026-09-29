@@ -204,6 +204,59 @@ public class PlayerController : MonoBehaviour
 достатньо накидати такий клас і показати мені, що він підключається без
 жодних змін в уже написаному коді (це і є OCP і DIP на практиці, а не в теорії).
 
+#### Крок 6 — пояснення (додано 2026-09-23, після того як перше формулювання виявилось незрозумілим)
+
+**Що перевіряється.** Подивись на `PlayerController.cs:17-21`:
+
+```csharp
+public void Construct(IInputService inputService)
+{
+    _inputService = inputService;
+    _inputService.OnJumpPressed += Jump;
+}
+```
+
+`PlayerController` тримає змінну типу **`IInputService`** — це інтерфейс, контракт "щось, що
+вміє `GetDirection()` і має подію `OnJumpPressed`". Ніде в класі немає `new InputService()` чи
+`KeyboardInputService` — клас не знає, що дані беруться саме з клавіатури, він просто довіряє
+контракту. Питання кроку 6: а що, як це неправда, і десь усе одно "зашито", що вхід — саме
+клавіатура?
+
+**Маленький приклад ідеї (не з нашого проєкту).** Уяви клас `Notifier`, який приймає `ISender` і
+викликає `sender.Send("привіт")`. Якщо `Notifier` написаний правильно (через інтерфейс), щоб
+надсилати не по email, а по SMS — пишеш **новий** клас `SmsSender : ISender` і підставляєш його
+замість `EmailSender` **в одному місці**, де об'єкти збираються докупи. Сам `Notifier` при цьому
+не редагується жодного разу. Якби ж `Notifier` у конструкторі приймав саме `EmailSender`
+(конкретний клас) — довелося б лізти правити сам `Notifier`. Оцю різницю і перевіряє крок 6.
+
+**Де "одне місце" у нашому проєкті.** `BootstrapState.cs:31-32`:
+
+```csharp
+_services.RegisterService<IAssetProvider, AssetProvider>();
+_services.RegisterService<IInputService, InputService>();
+```
+
+Це і є **composition root** — місце, де абстракція (`IInputService`) і конкретна реалізація
+(`InputService`) зводяться докупи: "коли хтось попросить `IInputService`, видай `InputService`".
+
+**Що конкретно зробити (специфікація, не код):**
+
+1. Новий клас, що реалізує `IInputService` (той самий `Vector2 GetDirection()` і
+   `event Action OnJumpPressed`), але замість клавіатури сам генерує рух — наприклад,
+   `GetDirection()` повертає вектор, що поступово обертається з часом (`Time.time` → кут →
+   `Vector2` через `Mathf.Cos`/`Mathf.Sin`), тож гравець піде по колу сам.
+   `OnJumpPressed` можна взагалі не викликати — це нормально.
+2. У `BootstrapState.RegisterServices()` заміни тип **другим параметром** у рядку з
+   `IInputService` — з `InputService` на новий клас.
+3. Play Mode: персонаж іде по колу сам, а `PlayerController.cs` і `InputService.cs` при цьому не
+   редагувались — це звіряється дифом.
+
+**Чому це саме OCP + DIP:**
+- **OCP** — нова поведінка додана **новим класом**, без редагування існуючих
+  (`PlayerController`, `InputService`).
+- **DIP** — `PlayerController` залежить від абстракції, тому підміна реалізації в одному місці
+  (composition root) нічого в ньому не ламає.
+
 ---
 
 ## Мікро-перевірки по кроках

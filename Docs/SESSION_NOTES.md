@@ -4,30 +4,32 @@
 коміт `5aa40e8`) і не деталі (для цього `ROADMAP.md` §6 + `ls Docs/Lessons/`) — тільки те,
 що з них не видно: на чому саме зупинились. Тримати ≤ ~50 рядків; довгі міркування — в ROADMAP.
 
-## Де зупинились (2026-09-19)
+## Де зупинились (2026-09-22)
 
-**Урок 04 у процесі** (`Docs/Lessons/04_player_controller.md`). Рух — `CharacterController`.
-Стан коду, який видно з диска:
+**Урок 04, кроки 1–5 пройшли рев'ю й прийняті** (`Docs/Lessons/04_player_controller.md`).
+Підлога `Static`, `Player.prefab` з одним `CharacterController`, `PlayerController.Construct`,
+рух/гравітація/стрибок (формула `√(2·g·h)`), заморожування напрямку в польоті — усе на диску,
+студент підтвердив Play Mode. Зауважень до правки не було.
 
-- `Level_Arena.unity`: є `Plane` з `MeshCollider` (підлога, крок 2а) — **ще не Static**
-  (`m_StaticEditorFlags: 0`); треба позначити для запікання NavMesh в уроці 08. Зміна не закомічена.
-- `Assets/Resources/Player.prefab`: примітив Capsule, на ньому лише `CapsuleCollider`;
-  `CharacterController` і `PlayerController` **ще нема**. Примітка: при додаванні
-  `CharacterController` стандартний `CapsuleCollider` треба прибрати (CC сам є колайдером).
-- `Assets/CodeBase/Player/` порожня. `GameLoopState` ще зі смоук-тестами (TestObject, лог Jump).
-
-Далі: `CharacterController` на prefab → `PlayerController` з `Construct(IInputService)` → спавн у
-`GameLoopState` (над підлогою, смоук-тести прибрати) → Play Mode → показати код на рев'ю.
-Питання "Після уроку…" з файлу уроку — перевірити на рев'ю; ще спитати, як влаштований стрибок
-(ручна вертикальна швидкість + гравітація).
+**Лишається до закриття уроку 04: крок 6** — другий клас, що реалізує `IInputService` (не
+клавіатура), підключається заміною в `BootstrapState.RegisterServices()`
+(`_services.RegisterService<IInputService, InputService>();`) — і тільки там; `PlayerController`,
+`InputService.cs`, `AllServices` лишаються незайманими. Перше формулювання кроку 6 виявилось
+незрозумілим студенту — повне покрокове пояснення (з маленьким ізольованим прикладом
+`Notifier`/`ISender` + прив'язка до реальних рядків `PlayerController.cs`/`BootstrapState.cs`)
+дописано прямо в `04_player_controller.md`, підрозділ "Крок 6 — пояснення (додано 2026-09-23)"
+одразу під основним текстом кроку 6 — звідти й давати його знову, якщо студент попросить
+повторити. Доки крок 6 не готовий — ROADMAP §6 чекбокс уроку 04 НЕ чіпати, і
+`PATTERNS.md`/`HISTORY.md`/`CV_LOG.md`/`ARCHITECTURE.md` під урок 04 не оновлювати (гейт —
+повний рев'ю, включно з кроком 6, + Play Mode).
 
 ## Висить і чекає на студента
 
+- **Крок 6 уроку 04** (другий `IInputService`) — див. вище, орієнтир вже дано в чаті.
 - **Підтвердження Play Mode для `ServicesResolver`** (опційне ДЗ уроку 03). Без нього не оновлювати
   `PATTERNS.md`/`HISTORY.md`/`CV_LOG.md`/`ARCHITECTURE.md` під цю роботу.
 - Студент попросив показати **варіант 3** резолвера ("жадібний" підбір конструктора з кількох)
   пізніше, окремо, лише для ознайомлення. Не пропонувати самому, дати, коли попросить.
-- ⭐ до уроку 03 (другий `IInputService`) лише запропоновано, не підтверджено.
 
 ## Рішення, що діють
 
