@@ -264,7 +264,8 @@ Mario") і просить **лише best practice**: порівняти кур�
 - [ ] `20_iap.md` — НОВИЙ: `IIapService`/`IAPProvider` (Adapter над Unity IAP), продукти, `ProductDescription`,
       `ShopItemContainer`. Код IAP немає в жодному з репозиторіїв курсу (лише 15 відео) — спиратися на
       відео курсу й офіційну документацію Unity IAP
-- [ ] `21_polish_and_build.md` — звук/VFX, білд стендалону, фінальний прогін і код-рев'ю на SOLID
+- [ ] `21_polish_and_build.md` — звук/VFX, арт-прохід арени (заміна примітивів на готовий набір, лише
+      після перевірки ліцензії), білд стендалону, фінальний прогін і код-рев'ю на SOLID
 - [ ] `22_ci.md` — фінальний урок курсу (Build Target, Build Artifacts, Notifications and API). Курс
       використовує Unity Cloud Build (платний, free trial 30 днів, за його ж конспектом). Актуальність
       сервісу й безкоштовну альтернативу (GitHub Actions) перевірити перед уроком

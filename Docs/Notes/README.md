@@ -52,6 +52,25 @@
   `where`-обмеження" — окремий розділ із мінімальним ізольованим прикладом і
   **реальним, запущеним виводом консолі**. Виникло з опційного ДЗ уроку 03
   "constructor-only auto-resolver", але саме рішення ДЗ у файлі не описане.
+- [`Kinematics_For_Jump.md`](Kinematics_For_Jump.md) — шкільна кінематика для стрибка, для
+  тих, хто забув фізику: розділ 0 (як читати формули, словник символів, за яких умов формули
+  працюють), таблиця «м'яч підкинули з 10 м/с», кожна формула з розписаною алгеброю
+  (`v = v0 − g·t`, `y = v0·t − g·t²/2`, час підйому, висота стрибка, `v0 = √(2·g·h)`, падіння,
+  як результат залежить від `h`), перевірка одиниць, кадри й `dt`, таблиця «формула → рядок
+  `PlayerController`», чому покадровий код трохи не збігається з формулою (і залежність від FPS),
+  покадровий розбір стрибка, змінні коду, типові помилки, перевірка в грі.
+- [`Input_System_Types_Reference.md`](Input_System_Types_Reference.md) — довідник за **типами
+  даних** нового Input System: ланцюг `InputActions` → `PlayerActions` → `InputAction`,
+  `ReadValue<T>()`/`IsPressed()`/`WasPressedThisFrame()`, події `started`/`performed`/
+  `canceled` і коли кожна спрацьовує, поля `CallbackContext`, інтерфейс `IPlayerActions`,
+  що лежить у `Vector2` від `Move` (W = `(0, 1)`), що віддає `IInputService`; наприкінці —
+  порожня таблиця для самостійного співставлення з `Movement_Approaches.md`.
+- [`Movement_Approaches.md`](Movement_Approaches.md) — довідник за задачами: рух через
+  `transform` / `CharacterController` / `Rigidbody`, `ForceMode`, кінематичне тіло, колізії й
+  тригери в кожному підході, порівняльна таблиця, правило вибору і типові пастки (дубль
+  `CapsuleCollider`, телепорт при увімкненому контролері, `Time.deltaTime`, `isGrounded`).
+  Виникло з питання "що таке `CharacterController`" в уроці 04; готового рішення уроку
+  чи ДЗ в файлі немає.
 - [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) —
   поглиблено: `InputAction` без обгортки, `.started`/`.performed`/`.canceled` на різних
   реальних прикладах (проста кнопка, аналогове значення, кілька біндингів, `Hold`

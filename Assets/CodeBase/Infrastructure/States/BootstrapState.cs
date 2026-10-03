@@ -28,12 +28,6 @@ namespace CodeBase.Infrastructure.States
 
         private void RegisterServices()
         {
-            // AssetProvider assetProvider = new AssetProvider();
-            // InputService inputService = new InputService();
-            // Debug.Log($"[FSM] {GetType().Name} initiated registration of a new service {assetProvider.GetType().Name}");
-            // Debug.Log($"[FSM] {GetType().Name} initiated registration of a new service {inputService.GetType().Name}");
-            // _services.RegisterService<IAssetProvider>(assetProvider);
-            // _services.RegisterService<IInputService>(inputService);
             _services.RegisterService<IAssetProvider, AssetProvider>();
             _services.RegisterService<IInputService, InputService>();
         }

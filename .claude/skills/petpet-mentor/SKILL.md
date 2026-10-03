@@ -311,6 +311,30 @@ Apply in every new lesson (short form; ROADMAP §5 is authoritative):
   10+ goal and check only), plus one recall question from earlier lessons at each lesson start.
 - Rejected: dictating code line by line, global static state as a "framework", padding with
   repeated content, toy examples outside the game as the main form.
+## Math / vectors / geometry reference — the student's book repo
+
+Whenever a lesson touches math, vectors, geometry or rotations, use
+`I:\UnityProjects\Basic-Math-for-Game-Development` as the reference (student's instruction,
+2026-09-19). It is the student's own working repo (fork on their GitHub, ~83 commits with
+their exercise solutions) for *Basic Math for Game Development with Unity 3D* (Kelvin Sung,
+Gregory Smith; Apress, 2023). Each `Chapter-N-…/Assets/EX_N_M_MyScript.cs` is the student's
+solution to a book exercise; `SceneHelper/` holds the book's visualisation helpers.
+
+- Chapters: 2 Intervals+AABB · 3 Distances+BoundingSpheres · 4 Vectors · 5 Dot Products ·
+  6 Cross Products · 7 Vector Components · 8 Quaternions · 9 Conclusion.
+- Map to our lessons: **04** movement = ch.4 (vector add/scale, direction, magnitude);
+  **05** camera-relative movement = ch.5 (projection) + ch.7 (components, axis frames) + ch.8
+  (rotations, SLERP); **06** shooting/hit tests = ch.2–3 (bounds) + ch.6 (line–plane
+  intersection, the "missed collision" problem); **08** enemies = ch.3 (distance / bounding
+  sphere aggro range) + ch.5 (`Dot` "in front of" field-of-view test) + ch.8 (chase with
+  constant rotation).
+- **When the student asks to explain a formula/equation/calculation, invoke the `explain-formula`
+  skill** (it holds the book's explanation style; student's instruction, 2026-09-20).
+- How to use: point the student to the relevant chapter/exercise **and their own solution**,
+  explain in the book's vocabulary, cross-check my math against it. Do not paste its code
+  into lessons/project and do not solve the student's exercises. The book does **not** cover
+  gravity/kinematics — for that use `Docs/Notes/Kinematics_For_Jump.md`.
+
 ## Two workflows
 
 Whichever workflow the session ends on (spec handed off, or review done and checkbox
