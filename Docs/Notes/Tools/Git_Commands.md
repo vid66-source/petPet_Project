@@ -70,6 +70,9 @@ git  restore  --source=main  --staged  --worktree  --  .claude  Docs
 | Зробити коміт | `git commit -m "Назва" -m "Опис"` | 7 |
 | Відправити на GitHub | `git push`, вперше: `git push -u origin <гілка>` | 8 |
 | Новий репозиторій з нуля | `git init` → `git remote add` → `git push -u` | 9 |
+| Перенести один коміт з іншої гілки в поточну | `git cherry-pick <хеш>` | 10 |
+| Виправити назву/опис останнього коміту | `git commit --amend -m "..." -m "..."` | 11 |
+| Відправити переписаний коміт на GitHub | `git push --force-with-lease` | 11 |
 
 ---
 
@@ -243,6 +246,7 @@ git restore --source=main --staged --worktree -- .claude Docs Assets/CodeBase/In
 |---|---|
 | `git push -u origin <гілка>` | вперше для нової гілки: відправити і запам'ятати зв'язок. `-u` = `--set-upstream` |
 | `git push` | наступні рази: git уже знає, куди (з `-u`) |
+| `git push --force-with-lease` | перезаписати гілку на GitHub після переписаної історії (`--amend`) — див. розділ 11 |
 | `git remote -v` | які віддалені репозиторії підключені |
 
 ```
@@ -264,6 +268,84 @@ origin	https://github.com/vid66-source/petPet_Project.git (push)
 
 ---
 
+## 10. `git cherry-pick` — перенести один коміт в іншу гілку
+
+```
+git cherry-pick <хеш>
+```
+
+Бере **зміни** вказаного коміту (а не весь стан гілки) і робить з них **новий** коміт
+поверх поточної гілки. Назва й опис копіюються, хеш — новий, бо в нового коміту інший
+"батько".
+
+Реальний випадок: коміт `753ebaa` з довідником зроблено в `phisicsPractice`; щоб те саме
+потрапило в `main`:
+
+```
+git switch main
+git cherry-pick 753ebaa
+```
+
+У `reflog` після цього:
+
+```
+1f5cf1e HEAD@{2026-10-03 19:23:36 +0300}: cherry-pick: Docs: add git commands reference and jourbal
+```
+
+Тепер в історії **два різні коміти** з однаковими змінами: `753ebaa` (у `phisicsPractice`)
+і `1f5cf1e` (у `main`). При майбутньому злитті гілок git побачить, що вміст збігається, і
+конфлікту не буде.
+
+| Порівняння | `cherry-pick <хеш>` | `restore --source=<гілка> -- <шляхи>` (розділ 6) |
+|---|---|---|
+| Що переносить | зміни **одного коміту** | **поточний вміст** указаних файлів |
+| Коміт | створює сам | треба зробити `git commit` самому |
+| Коли зручніше | "цей конкретний коміт потрібен і там" | "хочу ці теки такими, як у тій гілці зараз" |
+
+Якщо ті самі рядки змінені в обох гілках по-різному — конфлікт; git зупиниться й попросить
+його розв'язати (`git status` покаже файли). Відмінити незавершений cherry-pick:
+`git cherry-pick --abort`.
+
+## 11. `git commit --amend` + `git push --force-with-lease` — виправити останній коміт
+
+```
+git commit --amend -m "Нова назва" -m "Опис"
+git push --force-with-lease
+```
+
+| Частина | Значення |
+|---|---|
+| `--amend` | **замінити** останній коміт новим: взяти його вміст + те, що зараз в індексі, і нове повідомлення. Індекс порожній → змінюється лише повідомлення |
+| обидва `-m` | `--amend -m` замінює **все** повідомлення. Не повториш друге `-m` — опис зникне. Без `-m` взагалі — відкриється редактор зі старим текстом |
+| `--force-with-lease` | push, який **перезаписує** гілку на GitHub, але лише якщо там та сама версія, яку ти бачив востаннє. Якщо хтось устиг відправити інше — відмовить і нічого не затре |
+| `--force` (`-f`) | перезаписує **без перевірки**. Не використовувати, коли є `--force-with-lease` |
+
+**Чому потрібен force.** Коміт не редагується — створюється новий з новим хешем, а старий
+випадає з гілки. Локальна гілка і GitHub-гілка тепер мають різні останні коміти; звичайний
+`git push` відмовить (`rejected ... non-fast-forward`), бо виглядає, ніби ти хочеш
+загубити коміт з GitHub.
+
+**Коли можна.** Лише для комітів, які ніхто, крім тебе, не стягнув (свій репозиторій, своя
+гілка). У спільній гілці переписування історії ламає її іншим людям.
+
+**Тільки останній коміт.** `--amend` змінює лише HEAD. Старіші коміти так не виправиш.
+
+Реальний випадок: друкарська помилка `jourbal` у назві, коміт уже був у двох гілках і на
+GitHub. Виправлено в кожній гілці окремо (`--amend` чіпає лише поточну гілку):
+
+```
+6f78c8d HEAD@{2026-10-03 19:28:11 +0300}: commit (amend): Docs: add git commands reference and journal
+1f5cf1e HEAD@{2026-10-03 19:28:06 +0300}: checkout: moving from phisicsPractice to main
+a8c317b HEAD@{2026-10-03 19:27:17 +0300}: commit (amend): Docs: add git commands reference and journal
+753ebaa HEAD@{2026-10-03 19:24:33 +0300}: checkout: moving from main to phisicsPractice
+```
+
+Хеші змінились: `753ebaa` → `a8c317b` (`phisicsPractice`), `1f5cf1e` → `6f78c8d` (`main`).
+Старі коміти ще якийсь час живуть у `reflog` — повернутись можна через
+`git reset --hard <старий хеш>` (обережно: `--hard` викидає незакомічені зміни).
+
+---
+
 ## Журнал: що застосовувалось у цьому репозиторії
 
 Поповнюється, коли трапляється нова команда. Дати — з `git reflog` і чату.
@@ -276,4 +358,7 @@ origin	https://github.com/vid66-source/petPet_Project.git (push)
 | 2026-10-03 | `git restore --source=main --staged --worktree -- .claude Docs Assets/CodeBase/Infrastructure/States/BootstrapState.cs` | перенести в `phisicsPractice` скіли, документацію і чистку `BootstrapState` з `main` — без CC-руху (`PlayerController.cs`, `Player.prefab`) |
 | 2026-10-03 | `git status`, `git diff --cached --stat` | перевірити, що в індексі саме ці файли |
 | 2026-10-03 | `git commit -m "Sync skills, docs and BootstrapState cleanup from main" -m "..."` | коміт синхронізації (`5a69aea`) |
+| 2026-10-03 | `git add Docs/Notes/Tools/Git_Commands.md Docs/Notes/README.md`, `git commit -m "..." -m "..."` | коміт довідника в `phisicsPractice` (`753ebaa`) |
+| 2026-10-03 | `git switch main`, `git cherry-pick 753ebaa`, `git push` | той самий коміт у `main` (`1f5cf1e`): документацію ведемо в `main` |
+| 2026-10-03 | `git commit --amend -m "Docs: add git commands reference and journal" -m "..."` + `git push --force-with-lease` — у кожній з двох гілок | виправити друкарську помилку `jourbal` у вже відправленому коміті → `a8c317b` (`phisicsPractice`), `6f78c8d` (`main`) |
 | раніше, інші репозиторії | `git init`, `git branch -M main`, `git remote add origin ...`, `git push -u origin main` | створення репозиторію з нуля (з історії PowerShell) |
