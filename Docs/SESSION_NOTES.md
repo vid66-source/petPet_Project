@@ -4,7 +4,24 @@
 коміт `5aa40e8`) і не деталі (для цього `ROADMAP.md` §6 + `ls Docs/Lessons/`) — тільки те,
 що з них не видно: на чому саме зупинились. Тримати ≤ ~50 рядків; довгі міркування — в ROADMAP.
 
-## Де зупинились (2026-09-22)
+## Де зупинились (2026-10-06)
+
+**Наступна сесія — фізика: ⭐ Rigidbody-ДЗ уроку 04 на гілці `phisicsPractice`** (умови —
+`04_player_controller.md`, "Опційне ДЗ ⭐"). Коду руху на гілці ще немає: `PlayerController`
+лише з `Construct(IInputService)`. Студент починає писати сам — не давати рішення.
+
+- Документація впорядкована й закомічена в обох гілках (на GitHub): нотатки розкладено по
+  теках `Docs/Notes/{CSharp,Unity_Basics,Input,Physics_and_Movement,Tools}`. Останні коміти:
+  `eacc641` (`phisicsPractice`) = `e3df566` (`main`).
+- `Physics_and_Movement/Kinematics_For_Jump.md` — **довідник, відкривати за потреби**, не
+  проходити наперед. На початку — розділ "Мінімум" (3 ідеї ↔ рядки CC-`PlayerController`
+  з `main`, по ходу коду). Домовленість: нова механіка в коді → новий крок у "Мінімумі".
+- У конспекті: миттєва vs середня швидкість (3.2), падіння й середня за переміщенням/шляхом,
+  межа швидкості падіння для CC (3.17). Для Rigidbody-ДЗ: опір = Linear Damping (3.17).
+- Git-прийоми цієї сесії записано в `Tools/Git_Commands.md` (§1 `--short`, §7 `add -A/-p`,
+  §10 cherry-pick діапазоном, §12 `update-index --cacheinfo`) + журнал.
+
+## Урок 04 на `main` (стан з 2026-09-22)
 
 **Урок 04, кроки 1–5 пройшли рев'ю й прийняті** (`Docs/Lessons/04_player_controller.md`).
 Підлога `Static`, `Player.prefab` з одним `CharacterController`, `PlayerController.Construct`,
