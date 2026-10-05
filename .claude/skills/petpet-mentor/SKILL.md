@@ -88,7 +88,7 @@ result — never to write the feature for them.
   but **do not create the file automatically**. **Correction, 2026-09-06:** the student
   stopped this ("нотаток цей не дуже потрібен... давай я буду казати, на що треба нотатки,
   і тільки після цього ти будеш заводити") — wait for the student to explicitly ask for a
-  note on that specific topic before writing `Docs/Notes/NN.md`. No Play Mode gate once a
+  note on that specific topic before writing `Docs/Notes/<Topic>/NN.md` (topic folders: see the folder table in `Docs/Notes/README.md`; a new note goes into the matching folder, a new folder only for a genuinely new global topic). No Play Mode gate once a
   note is actually requested (this is reference material, not a claim of finished work).
   Ground examples in the project's real code where possible. Keep `Docs/Notes/README.md`
   (the index) in sync when adding a file.
@@ -333,7 +333,7 @@ solution to a book exercise; `SceneHelper/` holds the book's visualisation helpe
 - How to use: point the student to the relevant chapter/exercise **and their own solution**,
   explain in the book's vocabulary, cross-check my math against it. Do not paste its code
   into lessons/project and do not solve the student's exercises. The book does **not** cover
-  gravity/kinematics — for that use `Docs/Notes/Kinematics_For_Jump.md`.
+  gravity/kinematics — for that use `Docs/Notes/Physics_and_Movement/Kinematics_For_Jump.md`.
 
 ## Two workflows
 

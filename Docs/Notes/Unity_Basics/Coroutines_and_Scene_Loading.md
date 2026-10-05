@@ -53,7 +53,7 @@ private IEnumerator LoadScene(string sceneName, Action onLoaded)
 `SceneLoader` — чистий C#-клас (не `MonoBehaviour`), а корутини Unity вміє запускати
 тільки `MonoBehaviour`. Тому `SceneLoader` просить про це через абстракцію
 (`ICoroutineRunner`), а не стає сам `MonoBehaviour` і не шукає когось напряму. Детальніше
-— [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) (як
+— [`Delegates_Events_and_Subscriptions.md`](../CSharp/Delegates_Events_and_Subscriptions.md) (як
 передається колбек `onLoaded`, викликаний саме тут, у кінці корутини) і
 `Docs/PATTERNS.md` (DIP).
 
@@ -85,11 +85,11 @@ private IEnumerator LoadScene(string sceneName, Action onLoaded)
 ### `Action` (namespace `System`)
 
 `onLoaded` — колбек без аргументів, викликаний після завершення завантаження;
-детальніше в [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md).
+детальніше в [`Delegates_Events_and_Subscriptions.md`](../CSharp/Delegates_Events_and_Subscriptions.md).
 
 ## Пов'язане
 
-- [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md) —
+- [`Delegates_Events_and_Subscriptions.md`](../CSharp/Delegates_Events_and_Subscriptions.md) —
   `onLoaded`, який викликається тут після завершення завантаження.
 - [`DontDestroyOnLoad.md`](DontDestroyOnLoad.md) — що стається з об'єктами сцени під час
   цього завантаження.

@@ -56,7 +56,7 @@
   — власний репозиторій студента до книги *Basic Math for Game Development with Unity 3D*
   (Kelvin Sung, Gregory Smith, Apress 2023): розв'язки вправ `EX_N_M_MyScript.cs` по розділах
   2–9. Використовувати як джерело, коли урок торкається математики (карта розділ → урок у
-  `SKILL.md`). Кінематики/гравітації в книзі немає — там `Docs/Notes/Kinematics_For_Jump.md`.
+  `SKILL.md`). Кінематики/гравітації в книзі немає — там `Docs/Notes/Physics_and_Movement/Kinematics_For_Jump.md`.
 - Не показувати студенту код референсу напряму — лише форму (правило скіла).
 
 ## Спостереження про сам харнес

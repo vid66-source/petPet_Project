@@ -58,7 +58,7 @@ understand a specific part, restart *that part* from numbers; do not repeat the 
   in the book repo (map: 4 Vectors → movement; 5 Dot → field of view/projection; 6 Cross →
   planes/line-plane; 7 Components/axis frames → camera-relative movement; 8 Quaternions →
   rotation/SLERP; 2–3 Bounds/Distances → aggro/hit tests). The book has **no** gravity/kinematics —
-  for that use `Docs/Notes/Kinematics_For_Jump.md` as the model.
+  for that use `Docs/Notes/Physics_and_Movement/Kinematics_For_Jump.md` as the model.
 - **No homework solution by accident.** Give formulas, symbol ↔ code mapping and tools (`Mathf.Sqrt`,
   `Physics.gravity`); do not hand over the finished line of the student's current assignment
   unless they explicitly ask after trying. Never paste the book's code into the project.

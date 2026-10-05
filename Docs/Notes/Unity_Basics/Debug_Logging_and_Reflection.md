@@ -65,10 +65,10 @@ CodeBase.Infrastructure.GameBootstrapper:Awake () (at .../GameBootstrapper.cs:16
 ### `object.GetType()` (метод на `System.Object`, тобто буквально на всьому)
 
 - Повертає `System.Type` — реальний тип об'єкта в рантаймі. Детальний розбір усіх
-  властивостей/методів `Type` — [`Reflection_Basics.md`](Reflection_Basics.md).
+  властивостей/методів `Type` — [`Reflection_Basics.md`](../CSharp/Reflection_Basics.md).
 - `.Name` (властивість `Type`) → `string` — коротке ім'я класу.
 
 ## Пов'язане
 
-- [`Generics.md`](Generics.md) — `GameStateMachine.Enter<TState>()`, чий стек-трейс тут
+- [`Generics.md`](../CSharp/Generics.md) — `GameStateMachine.Enter<TState>()`, чий стек-трейс тут
   розбирається.
