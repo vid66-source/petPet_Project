@@ -376,7 +376,7 @@ public class AllServices
 
     public TService GetService<TService>() where TService : class, IService
     {
-        var service = _services[typeof(TService)] as TService;
+        TService service = _services[typeof(TService)] as TService;
         return service;
     }
 }
@@ -549,7 +549,7 @@ public class GameLoopState : IState
     public void Enter()
     {
         Debug.Log($"[FSM] Enter {GetType().Name}");
-        var obj = _assetProvider.LoadAsset(_assetPath);
+        GameObject obj = _assetProvider.LoadAsset(_assetPath);
         _assetProvider.SpawnAsset(obj, Vector3.one, Quaternion.identity);
     }
 
@@ -709,7 +709,7 @@ public class GameLoopState : IState
     public void Enter()
     {
         Debug.Log($"[FSM] Enter {GetType().Name}");
-        var obj = _assetProvider.LoadAsset(_assetPath);
+        GameObject obj = _assetProvider.LoadAsset(_assetPath);
         _assetProvider.SpawnAsset(obj, Vector3.one, Quaternion.identity);
         _inputService.OnJumpPressed += TestJump;
     }
