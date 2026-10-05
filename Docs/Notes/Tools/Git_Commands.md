@@ -66,11 +66,17 @@ git  restore  --source=main  --staged  --worktree  --  .claude  Docs
 | Забрати файли/теки з іншої гілки, не зливаючи гілки | `git restore --source=<гілка> --staged --worktree -- <шляхи>` | 6 |
 | Скасувати незакомічені зміни у файлі | `git restore <шлях>` | 6 |
 | Прибрати файл з індексу (але залишити зміни на диску) | `git restore --staged <шлях>` | 6 |
+| Коротко: по рядку на файл, що в індексі і що на диску | `git status --short` | 1 |
 | Додати зміни в індекс | `git add <шлях>` / `git add .` | 7 |
+| Додати разом з новими й видаленими файлами (переїзд у теки) | `git add -A <шляхи>` | 7 |
+| Додати лише частину змін файлу (у різні коміти) | `git add -p <шлях>` | 7 |
+| Закомітити переїзд файлу окремо від правок у ньому | `git update-index --cacheinfo "100644,<хеш>,<новий шлях>"` | 12 |
+| Дізнатись хеш вмісту файлу в коміті | `git rev-parse HEAD:<шлях>` | 12 |
 | Зробити коміт | `git commit -m "Назва" -m "Опис"` | 7 |
 | Відправити на GitHub | `git push`, вперше: `git push -u origin <гілка>` | 8 |
 | Новий репозиторій з нуля | `git init` → `git remote add` → `git push -u` | 9 |
 | Перенести один коміт з іншої гілки в поточну | `git cherry-pick <хеш>` | 10 |
+| Перенести кілька комітів підряд | `git cherry-pick <від>..<до>` | 10 |
 | Виправити назву/опис останнього коміту | `git commit --amend -m "..." -m "..."` | 11 |
 | Відправити переписаний коміт на GitHub | `git push --force-with-lease` | 11 |
 
@@ -97,8 +103,41 @@ nothing to commit, working tree clean
 | `up to date with 'origin/phisicsPractice'` | твоя гілка і її копія на GitHub однакові |
 | `working tree clean` | на диску немає незакомічених змін |
 
-Корисна опція: `git status --short` (`-s`) — по рядку на файл: `M` змінено, `A` додано,
-`D` видалено, `??` git про файл ще не знає. Ліва колонка — індекс, права — диск.
+### `git status --short` (`-s`) — по рядку на файл
+
+```
+git status --short
+```
+
+Реальний вивід (2026-10-06, перед комітом переїзду нотаток; скорочено):
+
+```
+M  .claude/skills/explain-formula/SKILL.md
+ M Docs/HISTORY.md
+R  Docs/Notes/Generics.md -> Docs/Notes/CSharp/Generics.md
+RM Docs/Notes/Reflection_Basics.md -> Docs/Notes/CSharp/Reflection_Basics.md
+A  Docs/Notes/Input/Input_System.md
+D  Docs/Notes/Input_System.md
+MM Docs/PATTERNS.md
+```
+
+Перед ім'ям файлу — **дві колонки**: ліва — що в **індексі** (піде в коміт), права — що
+змінено на **диску** поверх індексу. Пробіл = «тут змін немає».
+
+| Літера | Значення |
+|---|---|
+| `M` | modified — змінено |
+| `A` | added — новий файл |
+| `D` | deleted — видалено |
+| `R` | renamed — переміщено / перейменовано (`старий -> новий`) |
+| `??` | git про файл ще не знає (untracked), обидві колонки |
+
+| Приклад | Як читати |
+|---|---|
+| `M  файл` | зміни в індексі, на диску більше нічого → увесь піде в коміт |
+| ` M файл` | у індексі нічого, зміни лише на диску → у коміт **не** піде |
+| `MM файл` | частина змін в індексі, решта — лише на диску (після `git add -p`, розділ 7) |
+| `RM файл` | в індексі — переїзд, на диску — ще й правки (розділ 12) |
 
 ## 2. `git log` і `git reflog` — історія
 
@@ -240,6 +279,71 @@ git restore --source=main --staged --worktree -- .claude Docs Assets/CodeBase/In
 | `git commit -m "Назва" -m "Опис"` | друге `-m` — окремий абзац (опис під назвою) |
 | `git commit` (без `-m`) | відкриє текстовий редактор для повідомлення |
 
+### `git add -A <шляхи>` — разом з видаленими файлами
+
+```
+git add -A Docs/Notes Docs/Lessons/02_asset_provider.md .claude/skills
+```
+
+| Частина | Значення |
+|---|---|
+| `-A` (all) | усі три види змін: змінені, **нові** і **видалені** файли |
+| шляхи | лише ці файли/теки (теку — рекурсивно) |
+
+Навіщо: при переїзді `Docs/Notes/Generics.md` → `Docs/Notes/CSharp/Generics.md` старий файл
+зник з диска. `-A` записує в індекс і зникнення старого, і появу нового — git бачить це як
+перейменування (`R` у `git status --short`). Окремої команди «перейменувати» git не
+зберігає: перейменування він вираховує сам за схожістю вмісту.
+
+### `git add -p <шлях>` — лише частину змін файлу
+
+```
+git add -p Docs/PATTERNS.md
+```
+
+`-p` (patch) — git показує зміни файлу **по фрагментах** (hunk) і про кожен питає, чи
+додавати. Так зміни одного файлу розкладаються по різних комітах. Реальний вивід:
+
+```
+@@ -221,7 +221,7 @@ public class AllServices
+
+     public TService GetService<TService>() where TService : class, IService
+     {
+-        var service = _services[typeof(TService)] as TService;
++        TService service = _services[typeof(TService)] as TService;
+         return service;
+     }
+ }
+(1/2) Stage this hunk [y,n,q,a,d,j,J,g,/,e,p,?]? n
+@@ -395,4 +395,4 @@ public void Exit()
+ подвоїв би виклики `TestJump`.
+
+ Далі читати: детальний розбір `.started`/`.performed`/`.canceled` і `CallbackContext`
+-— `Docs/Notes/InputAction_Events_and_CallbackContext.md`.
++— `Docs/Notes/Input/Input_System.md`.
+(2/2) Stage this hunk [y,n,q,a,d,K,g,/,e,p,?]? y
+```
+
+| Частина виводу | Значення |
+|---|---|
+| `@@ -221,7 +221,7 @@` | де фрагмент: зі старого рядка 221, 7 рядків → у новому з 221, 7 рядків |
+| `-` / `+` на початку рядка | рядок видалено / додано |
+| `(1/2)` | фрагмент 1 з 2 у цьому файлі |
+
+| Відповідь | Дія |
+|---|---|
+| `y` | додати фрагмент в індекс |
+| `n` | пропустити — лишиться на диску (` M`) |
+| `q` | вийти, решту не додавати |
+| `s` | розбити фрагмент на дрібніші, якщо в ньому дві різні зміни |
+| `?` | довідка по всіх літерах |
+
+Після `n` і `y` вище в `git status --short` файл став `MM`: заміна шляху — в індексі
+(коміт переїзду), `var` → `TService` — лише на диску (наступний коміт).
+
+Попередження `LF will be replaced by CRLF` — не помилка: git повідомляє, що змінить символи
+кінця рядка на віндовські, коли наступного разу запише файл. Вміст не міняється.
+
 ## 8. `git push` — відправити на GitHub
 
 | Команда | Що робить |
@@ -306,6 +410,36 @@ git cherry-pick 753ebaa
 його розв'язати (`git status` покаже файли). Відмінити незавершений cherry-pick:
 `git cherry-pick --abort`.
 
+### Кілька комітів підряд: `git cherry-pick <від>..<до>`
+
+```
+git switch main
+git cherry-pick a8c317b..phisicsPractice
+```
+
+| Частина | Значення |
+|---|---|
+| `a8c317b..phisicsPractice` | коміти, які є в `phisicsPractice`, але немає в `a8c317b` (символ `a..b`, розділ 0). Сам `a8c317b` **не** входить |
+| порядок | від старішого до новішого, кожен — новим комітом |
+
+Реальний випадок (2026-10-06): 5 комітів документації з `phisicsPractice` (`2ad2a60` …
+`6c1ff99`) перенесено в `main`, де стояв `6f78c8d` — копія `a8c317b`. У `reflog`:
+
+```
+180c461 HEAD@{2026-10-06 01:10:46 +0300}: cherry-pick: Docs: git notes - cherry-pick and amend
+4f66842 HEAD@{2026-10-06 01:10:46 +0300}: cherry-pick: Docs: reflection - arrays section and greedy constructor resolver
+4082824 HEAD@{2026-10-06 01:10:46 +0300}: cherry-pick: Docs: expand kinematics note
+63b3a62 HEAD@{2026-10-06 01:10:46 +0300}: cherry-pick: Docs: use explicit types instead of var in snippets
+969b467 HEAD@{2026-10-06 01:10:46 +0300}: cherry-pick: Docs: reorganize Notes into topic folders
+6f78c8d HEAD@{2026-10-06 01:10:39 +0300}: checkout: moving from phisicsPractice to main
+```
+
+Назви ті самі, хеші нові (`2ad2a60` → `969b467` і т.д.). Конфліктів не було, бо коміти
+чіпали лише `Docs/` і `.claude/`, а там обидві гілки до цього збігались.
+
+**Перевірити перед cherry-pick**, що збіг справді є: `git diff --stat main a8c317b -- Docs .claude`
+— порожній вивід = розбіжностей немає.
+
 ## 11. `git commit --amend` + `git push --force-with-lease` — виправити останній коміт
 
 ```
@@ -344,6 +478,76 @@ a8c317b HEAD@{2026-10-03 19:27:17 +0300}: commit (amend): Docs: add git commands
 Старі коміти ще якийсь час живуть у `reflog` — повернутись можна через
 `git reset --hard <старий хеш>` (обережно: `--hard` викидає незакомічені зміни).
 
+## 12. Переїзд файлу окремим комітом від правок у ньому: `git update-index --cacheinfo`
+
+**Задача.** Файл і перемістили, і дописали. Хочеться двох комітів: «перемістив» (вміст
+старий) і «дописав». Але `git add` кладе в індекс файл **таким, як він зараз на диску** —
+тобто вже дописаним, і обидві зміни потрапляють в один коміт.
+
+**Рішення.** Після `git add` підмінити файл в індексі старою версією з останнього коміту,
+вже під новим шляхом. Диск не чіпається — правки лишаються і йдуть наступним комітом.
+
+```
+git add -A Docs/Notes
+git update-index --cacheinfo "100644,$(git rev-parse HEAD:Docs/Notes/Reflection_Basics.md),Docs/Notes/CSharp/Reflection_Basics.md"
+```
+
+| | В індексі (піде в коміт переїзду) | На диску |
+|---|---|---|
+| Після `git add -A` | новий шлях, **дописаний** вміст | новий шлях, дописаний вміст |
+| Після `update-index` | новий шлях, **старий** вміст | без змін — дописаний |
+
+### Частини команди
+
+| Частина | Значення |
+|---|---|
+| `git rev-parse HEAD:<старий шлях>` | хеш **вмісту** файлу, яким він був в останньому коміті (`HEAD:шлях` — розділ 0) |
+| `$( … )` | спершу виконати команду в дужках і підставити її вивід у рядок. Працює і в Git Bash, і в PowerShell |
+| `update-index` | низькорівнева команда: редагує індекс напряму |
+| `--cacheinfo "режим,хеш,шлях"` | записати в індекс «за цим шляхом лежить вміст з цим хешем», не дивлячись на диск |
+| `100644` | режим: звичайний файл, не виконуваний (так у всіх `.md`) |
+| новий шлях | куди файл переїхав |
+
+Старий вміст уже зберігається в git (він є в коміті `HEAD`), тому його не треба
+створювати — досить указати хеш.
+
+### Що таке цей хеш — реальний вивід
+
+```
+$ git rev-parse HEAD:Docs/Notes/Reflection_Basics.md
+c031bb97d758d42833e998be88b0ebc723b9bbca
+
+$ git cat-file -t c031bb97d758d42833e998be88b0ebc723b9bbca
+blob
+
+$ git hash-object Docs/Notes/CSharp/Reflection_Basics.md
+ff46cdea5ffc90bb177209f55c36bfb59ef83a09
+
+$ git ls-files -s Docs/Notes/Reflection_Basics.md
+100644 c031bb97d758d42833e998be88b0ebc723b9bbca 0	Docs/Notes/Reflection_Basics.md
+```
+
+| Команда | Що показала |
+|---|---|
+| `rev-parse HEAD:шлях` | хеш старого вмісту з коміту |
+| `cat-file -t <хеш>` | тип об'єкта: `blob` — так git зберігає вміст файлу |
+| `hash-object <файл>` | хеш вмісту, який **зараз на диску**. Інший, бо вміст дописано: різний вміст → різний хеш |
+| `ls-files -s <шлях>` | запис в індексі: режим, хеш, стадія (`0` — звичайна), шлях. Саме такий рядок і пише `update-index` |
+
+### Як перевірити, що вийшло
+
+```
+$ git status --short
+RM Docs/Notes/Reflection_Basics.md -> Docs/Notes/CSharp/Reflection_Basics.md
+```
+
+`R` в індексі — переїзд, `M` на диску — правки, що чекають свого коміту. Після коміту git
+показав `rename Docs/Notes/{ => CSharp}/Reflection_Basics.md (100%)`: 100% — вміст
+незмінний, чисте перейменування.
+
+Простіший варіант без цієї команди: закомітити переїзд разом з правками одним комітом.
+Працює так само, лише в історії не видно окремо «перемістив» і «дописав».
+
 ---
 
 ## Журнал: що застосовувалось у цьому репозиторії
@@ -361,4 +565,10 @@ a8c317b HEAD@{2026-10-03 19:27:17 +0300}: commit (amend): Docs: add git commands
 | 2026-10-03 | `git add Docs/Notes/Tools/Git_Commands.md Docs/Notes/README.md`, `git commit -m "..." -m "..."` | коміт довідника в `phisicsPractice` (`753ebaa`) |
 | 2026-10-03 | `git switch main`, `git cherry-pick 753ebaa`, `git push` | той самий коміт у `main` (`1f5cf1e`): документацію ведемо в `main` |
 | 2026-10-03 | `git commit --amend -m "Docs: add git commands reference and journal" -m "..."` + `git push --force-with-lease` — у кожній з двох гілок | виправити друкарську помилку `jourbal` у вже відправленому коміті → `a8c317b` (`phisicsPractice`), `6f78c8d` (`main`) |
+| 2026-10-06 | `git status --short` | перевіряти індекс і диск по двох колонках між кроками |
+| 2026-10-06 | `git add -A Docs/Notes Docs/Lessons/02_asset_provider.md .claude/skills` | записати переїзд нотаток у теки разом з видаленням старих шляхів |
+| 2026-10-06 | `git update-index --cacheinfo "100644,$(git rev-parse HEAD:<старий>),<новий>"` × 3 | Reflection, Kinematics, Git_Commands — переїзд зі старим вмістом, правки окремими комітами |
+| 2026-10-06 | `git add -p Docs/PATTERNS.md`, `git add -p Docs/SESSION_NOTES.md` | розкласти фрагменти файлу по різних комітах (шлях — у коміт переїзду, решта — пізніше) |
+| 2026-10-06 | 5 × `git commit -m "..." -m "..."` | `2ad2a60` переїзд, `518d802` `var`, `0df2053` кінематика, `6010e26` рефлексія, `6c1ff99` git-довідник |
+| 2026-10-06 | `git push`, `git switch main`, `git cherry-pick a8c317b..phisicsPractice`, `git push` | ті самі 5 комітів у `main` (`969b467` … `180c461`) |
 | раніше, інші репозиторії | `git init`, `git branch -M main`, `git remote add origin ...`, `git push -u origin main` | створення репозиторію з нуля (з історії PowerShell) |
