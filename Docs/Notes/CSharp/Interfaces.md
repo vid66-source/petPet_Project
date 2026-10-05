@@ -81,7 +81,7 @@ public interface IService { }
 бібліотек. Єдиний зовнішній тип, що трапляється — `Console` (namespace `System`),
 метод `Console.WriteLine(string)` → `void`, той самий, що й в усіх інших
 ізольованих C#-прикладах у цих конспектах (не Unity — тому не `Debug.Log`, дивись
-різницю в [`Debug_Logging_and_Reflection.md`](Debug_Logging_and_Reflection.md)).
+різницю в [`Debug_Logging_and_Reflection.md`](../Unity_Basics/Debug_Logging_and_Reflection.md)).
 
 ## Пов'язане
 

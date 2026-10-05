@@ -395,4 +395,4 @@ public void Exit()
 подвоїв би виклики `TestJump`.
 
 Далі читати: детальний розбір `.started`/`.performed`/`.canceled` і `CallbackContext`
-— `Docs/Notes/InputAction_Events_and_CallbackContext.md`.
+— `Docs/Notes/Input/Input_System.md`.

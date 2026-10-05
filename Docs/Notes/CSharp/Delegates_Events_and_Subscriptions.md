@@ -255,7 +255,7 @@ public class Scoreboard
 застосований для завіси в `LoadLevelState.Exit()`: підписка без відписки — витік
 пам'яті/пізніше подвійний виклик обробника, якщо об'єкт перестворюється. Детальніше,
 з конкретними прикладами коли саме потрібно, а коли ні (і чому лямбда заважає
-відписатись) — [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) §8.
+відписатись) — [`Input_System.md`](../Input/Input_System.md) §9.
 
 ## 7. Інші форми подій, які трапляться поза цим проєктом (для впізнавання, не для використання тут)
 
@@ -289,7 +289,7 @@ public class Scoreboard
 
   Той самий принцип "рушій сам нічого не зберігає, лише виявляє й диспетчерить", що
   й у Input System (§6 вище, і детальніше в
-  [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md)):
+  [`Input_System.md`](../Input/Input_System.md) §6):
   Unity `EventSystem` щокадру сама перевіряє клік мишкою/дотик, знаходить **конкретну**
   кнопку під курсором і викликає **її власний** `onClick.Invoke()` — сам `EventSystem`
   списку підписників не тримає, це власність кожної окремої кнопки. У цьому проєкті
@@ -348,10 +348,10 @@ Inspector'і.
 
 - [`Generics.md`](Generics.md) — інший спосіб параметризувати поведінку (через тип, а
   не через переданий метод).
-- [`Input_System.md`](Input_System.md) — де саме в новому Input System трапляються
+- [`Input_System.md`](../Input/Input_System.md) — де саме в новому Input System трапляються
   `started`/`performed`/`canceled` і `CallbackContext`.
-- [`InputAction_Events_and_CallbackContext.md`](InputAction_Events_and_CallbackContext.md) —
+- [`Input_System.md`](../Input/Input_System.md) §6–9 —
   поглиблений розбір тих самих подій на реальних прикладах (`Value`-дії, кілька
   біндингів, `Hold` interaction), вкладений тип `CallbackContext`.
-- [`Coroutines_and_Scene_Loading.md`](Coroutines_and_Scene_Loading.md) — `onLoaded`,
+- [`Coroutines_and_Scene_Loading.md`](../Unity_Basics/Coroutines_and_Scene_Loading.md) — `onLoaded`,
   який викликається після завершення корутини завантаження.
