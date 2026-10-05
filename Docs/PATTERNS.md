@@ -221,7 +221,7 @@ public class AllServices
 
     public TService GetService<TService>() where TService : class, IService
     {
-        var service = _services[typeof(TService)] as TService;
+        TService service = _services[typeof(TService)] as TService;
         return service;
     }
 }
