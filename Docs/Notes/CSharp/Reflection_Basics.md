@@ -25,6 +25,238 @@
 | Створити об'єкт закритого generic-типу | `Activator.CreateInstance(Type)` | `object` | 7 |
 | Чи тип — сам шаблон / закритий / частково закритий | `IsGenericTypeDefinition`, `ContainsGenericParameters` | `bool` | 8 |
 | Обмеження (`where`) generic-параметра | `typeParam.GetGenericParameterConstraints()`, `.GenericParameterAttributes` | `Type[]`, flags | 9 |
+| Обрати з кількох конструкторів "найжадібніший", який можна виконати | `GetConstructors()` + `Array.Sort` + перевірка параметрів | `ConstructorInfo` | 10 |
+| Прочитати будь-яку форму `[]` у цьому файлі | — | — | 0 |
+
+---
+
+## 0. Масиви й `[]` — як читати всі форми в цьому файлі
+
+### Чому в рефлексії стільки масивів
+
+| Причина | Що з цього випливає |
+|---|---|
+| Кількість параметрів/конструкторів відома лише в рантаймі, але після отримання вже не змінюється | Масив — фіксованої довжини, з доступом за індексом; рости йому не треба |
+| Значення різних типів (`string` і `int`) треба передати в одному аргументі | Масив елементів спільного типу `object` → `object[]` (розділ 4) |
+| `System.Reflection` існує з .NET 1.0 — до появи generics і `List<T>` | Старі API приймають і повертають масиви, а не колекції |
+
+### Квадратні дужки в різних місцях означають різне
+
+| Де стоять `[]` | Приклад з цього файлу | Що означає |
+|---|---|---|
+| Після **типу** | `ConstructorInfo[] all`, `Type[] types`, `object[] args` | Тип "масив елементів цього типу". Довжини тут нема — довжина належить об'єкту, не змінній. |
+| Після **`new Тип`**, з числом | `new object[parameters.Length]` | Створити масив заданої довжини, заповнений значеннями за замовчуванням. |
+| Після `new Тип`, без числа, з `{ }` | `new object[] { 5 }` | Створити масив із перелічених елементів; довжину рахує компілятор. |
+| Після `new`, без типу | `new[] { typeof(string), typeof(int) }` | Те саме, але тип елементів компілятор виводить сам зі значень. |
+| Лише `{ }`, без `new` | `object[] args = { "R2D2", 100 };` | Скорочення попереднього — **тільки** в рядку оголошення змінної. |
+| Після **змінної** | `args[i]`, `parameters[i].ParameterType`, `GetConstructors()[0]` | Доступ до елемента за індексом (з 0). |
+| У виводі консолі | ``Box`1[System.Int32]``, `[[System.String, …]]` | Не синтаксис C#, а текстове ім'я типу від .NET (див. нижче). |
+
+### Створення масиву — усі форми
+
+```csharp
+object[] sized = new object[3];
+int[] sizedInts = new int[3];
+object[] full = new object[] { "R2D2", 100 };
+Type[] inferred = new[] { typeof(string), typeof(int) };
+object[] shortForm = { "R2D2", 100 };
+Type[] empty = Type.EmptyTypes;
+```
+
+Що реально лежить у кожній змінній після цих рядків (перевірено запуском: для
+кожної змінної надруковано `.GetType()`, `.Length` і кожен елемент):
+
+| Змінна | `.GetType()` | `.Length` | Елементи |
+|---|---|---|---|
+| `sized` | `System.Object[]` | 3 | `null`, `null`, `null` |
+| `sizedInts` | `System.Int32[]` | 3 | `0`, `0`, `0` |
+| `full` | `System.Object[]` | 2 | `"R2D2"`, `100` |
+| `inferred` | `System.Type[]` | 2 | `System.String`, `System.Int32` |
+| `shortForm` | `System.Object[]` | 2 | `"R2D2"`, `100` |
+| `empty` | `System.Type[]` | 0 | — |
+
+Що з цього видно:
+- `new T[n]` створює `n` клітинок, але нічого в них не кладе. Там лежить значення за
+  замовчуванням: `null` для посилальних типів (`object`, `string`, будь-який клас) і `0`
+  для `int`.
+- `full` і `shortForm` однакові: `{ … }` без `new` — лише коротший запис того самого.
+- `inferred` отримав тип `Type[]`, хоча після `new` тип не написаний — див. підрозділ нижче.
+
+| Форма | Коли брати |
+|---|---|
+| `new T[n]` | Довжина відома, значення будуть пізніше: `new object[parameters.Length]`, потім цикл `args[i] = …` (розділ 4). Порожні клітинки — `null` для класів, `0` для `int`. |
+| `new T[] { … }` | Значення відомі одразу, і масив передається прямо в аргумент методу, без окремої змінної: `method.Invoke(target, new object[] { 5 })` (розділ 5). |
+| `new[] { … }` | Те саме, коли тип очевидний зі значень і писати його вдруге зайве. |
+| `T[] x = { … }` | Значення відомі одразу, і є рядок оголошення змінної. |
+| `Type.EmptyTypes` | API вимагає `Type[]`, а передати нічого (розділ 2). |
+
+Запис і читання за індексом:
+
+```csharp
+sized[1] = "filled";
+object first = sized[0];
+object second = sized[1];
+```
+
+Після цього `first` — `null` (клітинку 0 ніхто не заповнював), `second` — `"filled"`,
+довжина `sized` так і лишилась 3.
+
+### `new[]` без типу — звідки компілятор знає тип масиву
+
+Тип масиву можна не писати: `new[] { 1, 2 }` замість `new int[] { 1, 2 }`. Тоді
+компілятор дивиться на тип значень у дужках і робить масив цього типу — **виведення
+типу** (type inference, та сама ідея, що в `var`). Тип при цьому такий самий суворий,
+його лише вирахував компілятор:
+
+```csharp
+int[] numbers = new[] { 1, 2 };
+string[] words = new[] { "a", "b" };
+Type[] types = new[] { typeof(string), typeof(int) };
+```
+
+```
+System.Int32[]
+System.String[]
+System.Type[]
+```
+
+Пастка в третьому рядку: `typeof(string)` — **не рядок**, а об'єкт-опис типу `string`
+(його ім'я, конструктори, методи), і цей об'єкт має тип `Type` (розділ 1). Обидва
+елементи — `Type`, тому й масив `Type[]`:
+
+| Запис | Що в масиві | Тип масиву |
+|---|---|---|
+| `new[] { "a", "b" }` | два **рядки** | `string[]` |
+| `new[] { typeof(string), typeof(int) }` | два **описи типів** | `Type[]` |
+
+Навіщо масив описів типів: `GetConstructor(Type[])` (розділ 2) шукає конструктор за
+списком **типів** параметрів — "знайди конструктор, що приймає (`string`, `int`)", — а
+не за значеннями.
+
+Якщо надрукувати `typeof(string).GetType()`, вийде `System.RuntimeType`, а не
+`System.Type`: це внутрішній клас .NET, що успадковує `Type`. Думати про нього можна
+просто як про `Type` — тому `Type t = typeof(string);` і компілюється.
+
+Якщо значення в дужках різних типів (`"R2D2"` і `100`), вивести тип не вийде — див.
+помилку (2) нижче.
+
+
+### Що не компілюється (перевірено з `LangVersion 9.0`, як у Unity-проєкті)
+
+```csharp
+object[] args;
+args = { "R2D2", 100 };                              // (1)
+object[] mixed = new[] { "R2D2", 100 };              // (2)
+object[] wrongSize = new object[3] { "R2D2", 100 };  // (3)
+int[] modern = [1, 2, 3];                            // (4)
+```
+
+```
+(1) error CS1525: Invalid expression term '{'
+(2) error CS0826: No best type found for implicitly-typed array
+(3) error CS0847: An array initializer of length '3' is expected
+(4) error CS8773: Feature 'collection expressions' is not available in C# 9.0. Please use language version 12.0 or greater.
+```
+
+| № | Чому |
+|---|---|
+| 1 | Голі `{ }` дозволені лише при оголошенні; для присвоєння пізніше потрібен `new object[] { … }`. |
+| 2 | `new[]` виводить тип зі значень, а в `string` і `int` спільного типу, крім `object`, компілятор сам не обирає — треба явно `new object[] { … }`. |
+| 3 | Якщо вказано і довжину, і елементи, вони мусять збігатися. |
+| 4 | `[1, 2, 3]` — collection expressions з C# 12. У свіжій документації .NET їх видно часто, але в Unity (C# 9) вони не компілюються. |
+
+### `params` — масив, якого не видно у виклику
+
+Частина API рефлексії оголошена з `params Type[]`. Тому в розділах 6–7
+`MakeGenericMethod(typeof(int))` викликається з **одним** `Type`, хоча в мапі
+задач вгорі написано `MakeGenericMethod(Type[])`: масив збирає компілятор.
+
+```csharp
+static int Sum(params int[] numbers)
+{
+    Console.WriteLine($"  Sum got {numbers.GetType()} Length={numbers.Length}");
+    int total = 0;
+    foreach (int n in numbers)
+        total += n;
+    return total;
+}
+
+Console.WriteLine(Sum(1, 2, 3));
+Console.WriteLine(Sum(new int[] { 1, 2, 3 }));
+Console.WriteLine(Sum());
+```
+
+```
+  Sum got System.Int32[] Length=3
+6
+  Sum got System.Int32[] Length=3
+6
+  Sum got System.Int32[] Length=0
+0
+```
+
+Усередині методу завжди звичайний масив. Окремі аргументи компілятор пакує в
+масив сам, готовий масив передається як є, а виклик без аргументів дає масив
+довжини 0.
+
+`ConstructorInfo.Invoke(object[])` оголошено **без** `params`, тому там масив
+завжди створюється вручну.
+
+### `[]` у виводі консолі — ім'я типу від .NET, не C#
+
+**Де ти це побачиш.** Коли друкуєш об'єкт `Type` через `Console.WriteLine`/`Debug.Log`,
+а також у стек-трейсах помилок, наприклад ``ListBuilder`1[[System.__Canon, …]]`` у
+`Stack overflow` з розділу 10. Квадратні дужки там — не масиви й не синтаксис C#.
+
+**Клас для прикладу.** `Box<T>` — найпростіший generic-клас, оголошений тут лише для
+демонстрації: "коробка", що зберігає одне значення типу `T`. `Box<int>` — коробка для
+`int`, `Box<string>` — для `string`. (Generics — у [`Generics.md`](Generics.md).)
+
+```csharp
+public class Box<T>
+{
+    public T Value;
+}
+```
+
+`typeof(X)` повертає об'єкт `Type`, що описує тип `X` (докладніше — розділ 1).
+Друкуємо його трьома способами й порівнюємо зі звичними типами:
+
+```csharp
+Type boxOfInt = typeof(Box<int>);
+Console.WriteLine(boxOfInt.Name);
+Console.WriteLine(boxOfInt);
+Console.WriteLine(boxOfInt.FullName);
+
+Type intArray = typeof(int[]);
+Console.WriteLine(intArray);
+
+Type listOfString = typeof(List<string>);
+Console.WriteLine(listOfString);
+
+Type dictionary = typeof(Dictionary<string, int>);
+Console.WriteLine(dictionary);
+```
+
+```
+Box`1
+Box`1[System.Int32]
+Box`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+System.Int32[]
+System.Collections.Generic.List`1[System.String]
+System.Collections.Generic.Dictionary`2[System.String,System.Int32]
+```
+
+| Рядок виводу | Звідки | Як читати |
+|---|---|---|
+| ``Box`1`` | `.Name` — коротке ім'я | `` `1 `` = "generic-тип з **одним** типовим параметром". Запис `Box<T>` існує лише в C#; у самому .NET тип називається ``Box`1``. Чим закрито `T`, `.Name` не каже. |
+| ``Box`1[System.Int32]`` | `Console.WriteLine(type)` — те, що бачиш найчастіше | `[System.Int32]` — чим закрито `T`: це `Box<int>`. `System.Int32` — справжнє ім'я `int` у .NET. |
+| ``Box`1[[System.Int32, System.Private.CoreLib, …]]`` | `.FullName` — повне ім'я | Зовнішні `[ ]` — список типових аргументів; внутрішні `[ ]` — один аргумент разом зі збіркою (`.dll`), з якої він узятий. Довгий хвіст `Version=…, PublicKeyToken=…` — паспорт цієї збірки, для читання його можна пропускати. |
+| `System.Int32[]` | `typeof(int[])` | Єдиний випадок, де `[]` означає те саме, що в C#: масив `int`. |
+| ``List`1[System.String]`` | `typeof(List<string>)` | Те саме правило для вбудованого класу: `List<string>`. |
+| ``Dictionary`2[System.String,System.Int32]`` | `typeof(Dictionary<string, int>)` | `` `2 `` — два типові параметри; в дужках обидва через кому: `Dictionary<string, int>`. |
+
+Правило перекладу назад у C#: ``Ім'я`N[A,B]`` → `Ім'я<A, B>`.
 
 ---
 
@@ -527,9 +759,209 @@ System.ArgumentException: GenericArguments[0], 'NotAService', on 'T GetService[T
 коли компілятор цю помилку перевірити не міг (тип підставляється рефлексією, не
 в коді).
 
+## 10. Вибір одного конструктора з кількох — "жадібна" стратегія
+
+Розділ 2 дає два способи взяти один конструктор: `[0]` (мовчки довільний) і
+`.Single()` (вимагає рівно один). Третій спосіб — як у справжніх DI-контейнерах
+(Microsoft.Extensions.DependencyInjection, Autofac): **відсортувати конструктори
+від найбільшої кількості параметрів до найменшої і взяти перший, для якого кожен
+параметр вдається отримати**.
+
+"Отримати параметр" тут означає одне з двох:
+- тип уже є в словнику готових об'єктів (зареєстрований);
+- тип — конкретний клас, і хоча б один його конструктор теж можна виконати (рекурсивно).
+
+### Код
+
+```csharp
+static Dictionary<Type, object> registered = new Dictionary<Type, object>();
+
+static object ResolveRecursively(Type type)
+{
+    if (registered.TryGetValue(type, out object existing))
+        return existing;
+
+    ConstructorInfo constructor = PickGreediestConstructor(type);
+    ParameterInfo[] parameters = constructor.GetParameters();
+    object[] args = new object[parameters.Length];
+    for (int i = 0; i < parameters.Length; i++)
+        args[i] = ResolveRecursively(parameters[i].ParameterType);
+    return constructor.Invoke(args);
+}
+
+static int MoreParametersFirst(ConstructorInfo a, ConstructorInfo b)
+{
+    int aCount = a.GetParameters().Length;
+    int bCount = b.GetParameters().Length;
+    return bCount.CompareTo(aCount);
+}
+
+static ConstructorInfo PickGreediestConstructor(Type type)
+{
+    ConstructorInfo[] constructors = type.GetConstructors();
+    Array.Sort(constructors, MoreParametersFirst);
+
+    foreach (ConstructorInfo constructor in constructors)
+    {
+        if (AllParametersResolvable(constructor))
+            return constructor;
+    }
+
+    throw new InvalidOperationException($"{type.Name}: no constructor whose parameters can all be resolved");
+}
+
+static bool AllParametersResolvable(ConstructorInfo constructor)
+{
+    foreach (ParameterInfo parameter in constructor.GetParameters())
+    {
+        if (!CanResolve(parameter.ParameterType))
+            return false;
+    }
+    return true;
+}
+
+static bool CanResolve(Type type)
+{
+    if (registered.ContainsKey(type))
+        return true;
+
+    if (type.IsInterface || type.IsAbstract)
+        return false;
+
+    foreach (ConstructorInfo constructor in type.GetConstructors())
+    {
+        if (AllParametersResolvable(constructor))
+            return true;
+    }
+    return false;
+}
+```
+
+### `ResolveRecursively` — будує об'єкт
+
+| Рядок | Що робить |
+|---|---|
+| `registered.TryGetValue(type, out object existing)` | Один пошук у словнику, який і перевіряє наявність (`bool`), і віддає значення через `out`. |
+| `return existing;` | Тип уже є готовим — повертаємо його. Саме так параметр-**інтерфейс** отримує реалізацію (те, на чому падав розділ 4, "Межа підходу"). |
+| `PickGreediestConstructor(type)` | Єдине місце, що відрізняється від розділу 4: замість `[0]` — свідомий вибір. |
+| `GetParameters()` … `Invoke(args)` | Те саме, що в розділі 4: рекурсивно отримати кожен аргумент і викликати конструктор. |
+
+### `MoreParametersFirst` — компаратор для сортування
+
+| Рядок | Що робить |
+|---|---|
+| `int aCount = a.GetParameters().Length;` | Кількість параметрів першого конструктора. |
+| `int bCount = b.GetParameters().Length;` | Кількість параметрів другого. |
+| `return bCount.CompareTo(aCount);` | Контракт компаратора: `< 0` — `a` іде раніше, `> 0` — `b` іде раніше, `0` — рівні. `b` стоїть **ліворуч**, тому порядок **спадний** (3, 2, 1, 0 параметрів). Поміняти `a`/`b` місцями — вийде "скромний" вибір (спочатку найменше параметрів). |
+
+### `PickGreediestConstructor` — вибір
+
+| Рядок | Що робить |
+|---|---|
+| `type.GetConstructors()` | Усі публічні конструктори. Порядок у масиві документацією **не гарантований** — тому й потрібне сортування. |
+| `Array.Sort(constructors, MoreParametersFirst);` | Сортує масив **на місці** (нового масиву не створює). `MoreParametersFirst` передано як method group — компілятор сам перетворює його на делегат `Comparison<ConstructorInfo>` (див. [`Delegates_Events_and_Subscriptions.md`](Delegates_Events_and_Subscriptions.md)). |
+| `foreach` + `AllParametersResolvable` | Від найжаднішого до найскромнішого; перший, що проходить перевірку, — переможець. |
+| `throw new InvalidOperationException(...)` | Жоден не підійшов — падіння з повідомленням, що пояснює **чому**, замість `IndexOutOfRangeException` глибоко в рекурсії. |
+
+### `AllParametersResolvable` і `CanResolve` — перевірка без створення
+
+| Рядок | Що робить |
+|---|---|
+| `foreach (ParameterInfo parameter …)` + `return false` | Досить одного неотримуваного параметра — конструктор відпадає, решта параметрів не перевіряється. |
+| `registered.ContainsKey(type)` → `true` | Готовий об'єкт є. |
+| `type.IsInterface \|\| type.IsAbstract` → `false` | Незареєстрований інтерфейс/абстрактний клас створити нічим: метадані інтерфейсу не знають, хто його реалізує. |
+| останній `foreach` | Конкретний клас можна створити, якщо **хоч один** його конструктор розв'язний — рекурсія вниз по залежностях. |
+
+`CanResolve` нічого не створює — лише відповідає "чи можна". Створює потім
+`ResolveRecursively`.
+
+### Вивід
+
+Класи прикладу:
+
+```csharp
+public interface IEngine { }
+public interface IWheels { }
+public interface ITrailer { }
+public class Engine : IEngine { }
+public class Wheels : IWheels { }
+
+public class Car
+{
+    public Car() { Console.WriteLine("Car()"); }
+    public Car(IEngine engine) { Console.WriteLine("Car(IEngine)"); }
+    public Car(IEngine engine, IWheels wheels) { Console.WriteLine("Car(IEngine, IWheels)"); }
+    public Car(IEngine engine, IWheels wheels, ITrailer trailer) { Console.WriteLine("Car(IEngine, IWheels, ITrailer)"); }
+}
+```
+
+Зареєстровані `IEngine` і `IWheels`, `ITrailer` — ні (рядки `-> True/False` друкує
+відлагоджувальний рядок усередині `foreach` вибору):
+
+```
+Void .ctor(IEngine, IWheels, ITrailer) -> False
+Void .ctor(IEngine, IWheels) -> True
+Car(IEngine, IWheels)
+CanResolve calls: 5
+```
+
+Після `registered.Remove(typeof(IWheels))` — той самий `Car`, інший конструктор, жодної
+зміни в коді `Car`:
+
+```
+Void .ctor(IEngine, IWheels, ITrailer) -> False
+Void .ctor(IEngine, IWheels) -> False
+Void .ctor(IEngine) -> True
+Car(IEngine)
+CanResolve calls: 5
+```
+
+### Ціна: чому "дорогий"
+
+Ланцюжок із 10 класів, кожен приймає **два** екземпляри наступного:
+`L1(L2 a, L2 b)`, `L2(L3 a, L3 b)`, …, `L10()`.
+
+```
+L1..L10, 2 params each -> CanResolve calls: 8194
+```
+
+| Причина | Наслідок |
+|---|---|
+| Подвійний обхід: `CanResolve` перевіряє піддерево, потім `ResolveRecursively` іде вниз і на кожному рівні **знову** перевіряє своє піддерево | Та сама перевірка повторюється на кожному рівні |
+| Дві однакові залежності перевіряються двічі — результат ніде не запам'ятовується | Кількість росте як ~2^глибина |
+| `GetConstructors()`/`GetParameters()` щоразу виділяють нові масиви, сортування викликає `GetParameters()` ще раз | Зайва алокація на кожному кроці |
+
+Як це вирішують справжні контейнери: рішення "який конструктор і які аргументи для
+типу X" обчислюється **один раз** і кешується у словнику `Type → план створення`.
+
+### Що ламається
+
+| Ситуація | Що станеться |
+|---|---|
+| Цикл: `Chicken(Egg)`, `Egg(Chicken)` | Нескінченна рекурсія в `CanResolve` → `Stack overflow.` — процес завершується, `try/catch` такий виняток **не ловить**. Контейнери тримають стек "зараз будую" й кидають зрозумілий виняток про цикл. |
+| Два конструктори з **однаковою** кількістю параметрів, обидва розв'язні | `Array.Sort` — нестабільне сортування, переможець не визначений. Microsoft DI у цьому випадку свідомо кидає виняток про неоднозначні конструктори. |
+| Реєстрацію додали/прибрали | Клас **мовчки** переходить на інший конструктор (див. другий вивід вище) — поведінка змінилась без жодної зміни в його коді. |
+
+Реальний вивід для циклу:
+
+```
+Stack overflow.
+   at System.RuntimeType+ListBuilder`1[[System.__Canon, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]].ToArray()
+   at System.Type.GetConstructors()
+   at Program.CanResolve(System.Type)
+```
+
+### Коли що обирати
+
+| Стратегія | Коли |
+|---|---|
+| `.Single()` (розділ 2) | Правило "у сервісу рівно один публічний конструктор". Явно, дешево, порушення ловиться одразу. |
+| Жадібна (цей розділ) | Класи, які ти не контролюєш і які мають кілька конструкторів; загальний контейнер для чужого коду. |
+| `[0]` | Ніколи для вибору конструктора — порядок не гарантований. |
+
 ## Пов'язане
 
-- [`Debug_Logging_and_Reflection.md`](Debug_Logging_and_Reflection.md) — найпростіша
+- [`Debug_Logging_and_Reflection.md`](../Unity_Basics/Debug_Logging_and_Reflection.md) — найпростіша
   форма рефлексії, вже використана в проєкті (`GetType().Name` для логів FSM).
 - [`Generics.md`](Generics.md) — generics на рівні мови (без рефлексії):
   `where`-обмеження, кілька типових параметрів, generic-колекції.
