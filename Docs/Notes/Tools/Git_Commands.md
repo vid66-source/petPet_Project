@@ -571,4 +571,5 @@ RM Docs/Notes/Reflection_Basics.md -> Docs/Notes/CSharp/Reflection_Basics.md
 | 2026-10-06 | `git add -p Docs/PATTERNS.md`, `git add -p Docs/SESSION_NOTES.md` | розкласти фрагменти файлу по різних комітах (шлях — у коміт переїзду, решта — пізніше) |
 | 2026-10-06 | 5 × `git commit -m "..." -m "..."` | `2ad2a60` переїзд, `518d802` `var`, `0df2053` кінематика, `6010e26` рефлексія, `6c1ff99` git-довідник |
 | 2026-10-06 | `git push`, `git switch main`, `git cherry-pick a8c317b..phisicsPractice`, `git push` | ті самі 5 комітів у `main` (`969b467` … `180c461`) |
+| 2026-10-10 | `git commit -m "..." -m "..."`, `git switch main`, `git cherry-pick phisicsPractice`, `git switch phisicsPractice` | пояснення середньої швидкості в кінематиці — коміт у `phisicsPractice`, той самий у `main` (без `push`) |
 | раніше, інші репозиторії | `git init`, `git branch -M main`, `git remote add origin ...`, `git push -u origin main` | створення репозиторію з нуля (з історії PowerShell) |
